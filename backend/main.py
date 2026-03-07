@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import asyncio
 
-from backend.pipeline import run_pipeline
+from pipeline import run_pipeline
 
 app = FastAPI()
 
@@ -24,17 +25,16 @@ class QueryRequest(BaseModel):
     query: str
 
 @app.post("/api/query")
-def process_query(req: QueryRequest):
+async def process_query(req: QueryRequest):
     print(f"Received query: {req.query}")
     
-    # Process the query using the AI pipeline
-    script = run_pipeline(req.query)
+    # Run the blocking Gemini pipeline in a thread pool so it doesn't block
+    # the event loop and starve other incoming requests.
+    script = await asyncio.to_thread(run_pipeline, req.query)
     
-    # The pipeline returns raw text containing Desp instructions, separated by newlines.
-    # Convert it into a list of strings for the frontend to easily map over.
-    # Split by newline and remove empty lines.
     instructions = [line.strip() for line in script.splitlines() if line.strip()]
     
     return {
         "instructions": instructions
     }
+

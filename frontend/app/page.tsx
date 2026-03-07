@@ -92,8 +92,10 @@ export default function UnifiedHome() {
   }, [activeView]);
 
   const [scriptText, setScriptText] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleCommandSubmit = async (prompt: string) => {
+    setIsGenerating(true);
     try {
       const response = await fetch("/api/query", {
         method: "POST",
@@ -107,6 +109,8 @@ export default function UnifiedHome() {
     } catch (e) {
       console.error("Failed to fetch script:", e);
       setScriptText(`// Error generating script\n// ${e}`);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -150,6 +154,15 @@ export default function UnifiedHome() {
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', margin: 0, padding: 0, fontFamily: 'monospace', overflow: 'hidden', backgroundColor: '#000' }}>
 
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
       {/* Sidebar */}
       <div style={{
         width: '400px',
@@ -191,19 +204,21 @@ export default function UnifiedHome() {
         />
         <button
           onClick={isRunning ? handleStopScript : parseAndExecuteScript}
+          disabled={isGenerating}
           style={{
             padding: '12px',
-            cursor: 'pointer',
+            cursor: isGenerating ? 'not-allowed' : 'pointer',
             fontSize: '1rem',
-            backgroundColor: isRunning ? '#ef4444' : '#14b8a6', // Red when running
-            color: isRunning ? 'white' : 'black',
+            backgroundColor: isGenerating ? '#555' : (isRunning ? '#ef4444' : '#14b8a6'),
+            color: isGenerating ? '#999' : (isRunning ? 'white' : 'black'),
             border: 'none',
             borderRadius: '8px',
             fontWeight: 'bold',
-            transition: 'background-color 0.3s ease, opacity 0.2s ease'
+            transition: 'background-color 0.3s ease, opacity 0.2s ease',
+            opacity: isGenerating ? 0.6 : 1
           }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          onMouseEnter={(e) => { if (!isGenerating) e.currentTarget.style.opacity = '0.8'; }}
+          onMouseLeave={(e) => { if (!isGenerating) e.currentTarget.style.opacity = '1'; }}
         >
           {isRunning ? "Stop Script" : "Run Script"}
         </button>
@@ -242,6 +257,49 @@ export default function UnifiedHome() {
         />
 
         <CommandPrompt onSubmit={handleCommandSubmit} />
+
+        {/* Loading overlay */}
+        {isGenerating && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+            pointerEvents: 'all'
+          }}>
+            <div style={{
+              background: 'rgba(20, 20, 20, 0.85)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              padding: '32px 48px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+              animation: 'fadeIn 0.3s ease'
+            }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                border: '3px solid rgba(255, 255, 255, 0.15)',
+                borderTop: '3px solid #14b8a6',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite'
+              }} />
+              <span style={{
+                color: '#e2e8f0',
+                fontSize: '0.95rem',
+                fontFamily: 'monospace',
+                letterSpacing: '0.5px'
+              }}>Generating instructions...</span>
+            </div>
+          </div>
+        )}
 
       </div>
 

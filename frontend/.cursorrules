@@ -1,0 +1,9 @@
+DO NOT try to verify your own code output by running commands like `npm run build`, `npm run lint`, or running the application to test it. The user will verify the output themselves. Only write the code.
+
+CRITICAL INSTRUCTION:
+DO NOT TOUCH ANY OF THE SCRIPT CODE, THE DESMOS CODE, AND CANVAS CODE UNLESS EXPLICITLY TOLD TO. THESE ARE CORE LOGIC THAT HAVE BIG CONSEQUENCES IF TAMPERED UNSURELY. YOU CAN ONLY EXECUTE CHANGES EXPLICITLY TOLD BY THE USER. DO NOT MAKE SIDE EFFECT CHANGES TO THESE FILES IN RESPONSE TO ANOTHER REQUEST.
+
+Specifically, DO NOT modify the following files unless explicitly requested by the user:
+- `frontend/lib/ScriptParser.ts`
+- `frontend/lib/DesmosController.ts`
+- `frontend/lib/CanvasController.ts`
