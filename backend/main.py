@@ -38,6 +38,7 @@ async def process_query(req: QueryRequest):
     instructions = [line.strip() for line in script.splitlines() if line.strip()]
     
     return {
+        "script": script,
         "instructions": instructions
     }
 
