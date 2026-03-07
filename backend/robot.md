@@ -179,7 +179,113 @@ Example:
 
 ---
 
-## 6. Desmos-Only: Camera & Object Control
+## 6. Global Variables & Synchronized Animation (NEW - MOST IMPORTANT)
+
+**CRITICAL: This is the PRIMARY way to create synchronized mathematical animations.**
+
+Global variables are the foundation of all synchronized mathematical animations. Instead of animating individual objects, you animate the **parameters** and let all dependent objects update automatically.
+
+### Core Variable Commands
+
+`setVariable <name> <value>`
+
+Defines a global variable that can be referenced in any equation or coordinate.
+
+Example:
+`setVariable "h" 1`
+
+---
+
+`animateVariable <name> <from_value> <to_value> [duration_ms]`
+
+**This is the MAIN animation command.** Animates a variable over time, and ALL objects that reference this variable will move together in perfect synchronization.
+
+Example:
+`animateVariable "h" 1 0.1 3000`
+
+This animates variable `h` from 1 to 0.1 over 3 seconds. Every equation, coordinate, or object that uses `h` will update smoothly.
+
+---
+
+`freeVariable <name>`
+
+Removes a variable and stops any animation on it.
+
+---
+
+`stopVariableAnimation <name>`
+
+Stops the animation of a variable without removing it.
+
+---
+
+### Synchronized Animation Patterns
+
+**Epsilon-Delta Proofs:**
+```text
+setVariable "h" 1
+plotEquation "epsTop" "y=4+h" "#9A72AC"
+plotEquation "epsBot" "y=4-h" "#9A72AC"
+plotEquation "delLeft" "x=2-h/4" "#29ABCA"
+plotEquation "delRight" "x=2+h/4" "#29ABCA"
+plotCoordinateExpression "tracker" "(2-h/4,(2-h/4)^2)" "#FF862F"
+animateVariable "h" 1 0.1 3000
+```
+
+**Secant to Tangent:**
+```text
+setVariable "h" 1
+plotEquation "curve" "y=x^2" "#58C4DD"
+plotCoordinateExpression "p1" "(1,1)" "#FFFF00"
+plotCoordinateExpression "p2" "(1+h,(1+h)^2)" "#FC6255"
+plotEquation "secant" "y-1=((1+h)^2-1)/h*(x-1)" "#83C167"
+animateVariable "h" 1 0.01 4000
+```
+
+**Riemann Sum Refinement:**
+```text
+setVariable "n" 2
+plotEquation "rect1" "0 \le x \le 2/n \{0 \le y \le (2/n)^2\}" "#83C167"
+plotEquation "rect2" "2/n \le x \le 4/n \{0 \le y \le (4/n)^2\}" "#83C167"
+animateVariable "n" 2 16 4000
+```
+
+**Multiple Synchronized Oscillators:**
+```text
+setVariable "freq" 1
+plotEquation "wave1" "y=\sin(freq*x)" "#58C4DD"
+plotEquation "wave2" "y=0.5*\sin(freq*x+\pi/4)" "#FC6255"
+animateVariable "freq" 1 3 3000
+```
+
+### Variable-Based Coordinates
+
+`plotCoordinateExpression <id> <coordinate_latex> [color_hex]`
+
+Plots a coordinate point using an expression that can reference variables. The point automatically updates when variables change.
+
+Example:
+`plotCoordinateExpression "tracker" "(h, h^2)" "#FF862F"`
+
+**CRITICAL ANIMATION PRINCIPLE:**
+
+Always use `animateVariable` instead of the old `animateCoordinate` or `animateDottedEquation` commands. Variable animation provides:
+- Perfect synchronization between multiple objects
+- Mathematical precision
+- Cleaner, more maintainable scripts
+- True parameter-based animation
+
+**Animation Best Practice:**
+
+1. Identify the mathematical parameter (h, t, n, epsilon, etc.)
+2. Set it as a variable with `setVariable`
+3. Create all objects using expressions with that variable
+4. Use `animateVariable` to drive the animation
+5. Let mathematics handle the synchronization automatically
+
+---
+
+## 7. Desmos-Only: Camera & Object Control
 
 ONLY works in the `"desmos"` view.
 

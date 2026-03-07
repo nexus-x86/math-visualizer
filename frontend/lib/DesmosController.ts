@@ -3,6 +3,14 @@ export class DesmosController {
     private animationRef: number | null = null;
     private customAnimRefs: Set<number> = new Set();
     private trackedIds: Set<string> = new Set();
+    private globalVariables: Map<string, number> = new Map();
+    private variableAnimations: Map<string, {
+        startValue: number,
+        endValue: number,
+        startTime: number,
+        duration: number,
+        frameId: number
+    }> = new Map();
 
     // State Tracking for camera animations
     private targetCenterX: number | null = null;
@@ -72,6 +80,9 @@ export class DesmosController {
         });
         this.trackedIds.clear();
 
+        // Clear variables
+        this.clearVariables();
+
         // Also remove default items just in case
         this.calculator.removeExpression({ id: 'user-equation' });
         this.calculator.removeExpression({ id: 'user-point' });
@@ -95,6 +106,9 @@ export class DesmosController {
         }
         this.customAnimRefs.forEach(cancelAnimationFrame);
         this.customAnimRefs.clear();
+
+        // Stop all variable animations
+        this.stopAllVariableAnimations();
 
         // Reset target tracking variables when animations are cancelled
         this.targetCenterX = null;
@@ -371,5 +385,174 @@ export class DesmosController {
         this.targetViewportWidth = endViewportWidth;
 
         this.animationRef = requestAnimationFrame(animate);
+    }
+
+    /**
+     * Sets a global variable that can be used across expressions.
+     * @param name The name of the global variable.
+     * @param value The value to assign to the variable.
+     */
+    public setVariable(name: string, value: number) {
+        if (!this.calculator || !name) return;
+
+        this.calculator.setExpression({
+            id: `var-${name}`,
+            latex: `${name}=${value}`,
+            secret: true
+        });
+
+        this.globalVariables.set(name, value);
+        this.trackedIds.add(`var-${name}`);
+    }
+
+    /**
+     * Gets the value of a variable.
+     * @param name The name of the variable.
+     * @returns The value of the variable, or undefined if not found.
+     */
+    public getVariable(name: string): number | undefined {
+        return this.globalVariables.get(name);
+    }
+
+    /**
+     * Gets all variables as an object.
+     * @returns An object containing all variables and their values.
+     */
+    public getAllVariables(): Record<string, number> {
+        return Object.fromEntries(this.globalVariables);
+    }
+
+    /**
+     * Removes a variable.
+     * @param name The name of the variable to remove.
+     */
+    public freeVariable(name: string) {
+        if (!this.calculator) return;
+
+        this.stopVariableAnimation(name);
+        this.calculator.removeExpression({ id: `var-${name}` });
+        this.globalVariables.delete(name);
+        this.trackedIds.delete(`var-${name}`);
+    }
+
+    /**
+     * Clears all variables.
+     */
+    public clearVariables() {
+        if (!this.calculator) return;
+
+        this.variableAnimations.forEach((_, name) => {
+            this.stopVariableAnimation(name);
+        });
+
+        this.globalVariables.forEach((_, name) => {
+            this.calculator.removeExpression({ id: `var-${name}` });
+            this.trackedIds.delete(`var-${name}`);
+        });
+
+        this.globalVariables.clear();
+    }
+
+    /**
+     * Updates multiple variables at once.
+     * @param variables An object containing variable names and their values.
+     */
+    public setVariables(variables: Record<string, number>) {
+        Object.entries(variables).forEach(([name, value]) => {
+            this.setVariable(name, value);
+        });
+    }
+
+    /**
+     * Animates a variable from one value to another.
+     * @param name The name of the variable to animate.
+     * @param fromValue The starting value.
+     * @param toValue The ending value.
+     * @param duration Duration in milliseconds.
+     */
+    public animateVariable(name: string, fromValue: number, toValue: number, duration: number = 2000) {
+        if (!this.calculator || !name) return;
+
+        this.stopVariableAnimation(name);
+
+        this.setVariable(name, fromValue);
+        const startTime = performance.now();
+
+        const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const currentValue = fromValue + (toValue - fromValue) * progress;
+            this.setVariable(name, currentValue);
+
+            if (progress < 1) {
+                const frameId = requestAnimationFrame(animate);
+                this.variableAnimations.set(name, {
+                    startValue: fromValue,
+                    endValue: toValue,
+                    startTime,
+                    duration,
+                    frameId
+                });
+            } else {
+                this.variableAnimations.delete(name);
+            }
+        };
+
+        const frameId = requestAnimationFrame(animate);
+        this.variableAnimations.set(name, {
+            startValue: fromValue,
+            endValue: toValue,
+            startTime,
+            duration,
+            frameId
+        });
+    }
+
+    /**
+     * Stops animation of a specific variable.
+     * @param name The name of the variable.
+     */
+    public stopVariableAnimation(name: string) {
+        const animation = this.variableAnimations.get(name);
+        if (animation) {
+            cancelAnimationFrame(animation.frameId);
+            this.variableAnimations.delete(name);
+        }
+    }
+
+    /**
+     * Pauses animation of a specific variable.
+     * @param name The name of the variable.
+     */
+    public pauseVariableAnimation(name: string) {
+        this.stopVariableAnimation(name);
+    }
+
+    /**
+     * Stops all variable animations.
+     */
+    public stopAllVariableAnimations() {
+        this.variableAnimations.forEach((animation, name) => {
+            cancelAnimationFrame(animation.frameId);
+        });
+        this.variableAnimations.clear();
+    }
+
+    /**
+     * Plots a coordinate using an expression that can reference variables.
+     * @param id The unique identifier for this coordinate.
+     * @param coordExpr The LaTeX expression for the coordinate (e.g. "(h, h^2)").
+     * @param color Optional hex color string for the coordinate dot.
+     */
+    public plotCoordinateExpression(id: string, coordExpr: string, color?: string) {
+        if (!this.calculator || !coordExpr) return;
+        this.calculator.setExpression({
+            id: id,
+            latex: coordExpr,
+            showLabel: true,
+            color: color || '#10bbbb'
+        });
+        this.trackedIds.add(id);
     }
 }

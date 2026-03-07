@@ -172,6 +172,57 @@ export class ScriptParser {
             controller.resetViewport();
         });
 
+        parser.registerCommand('setVariable', (args) => {
+            if (args.length >= 2) {
+                const name = args[0];
+                const value = parseFloat(args[1]);
+                if (!isNaN(value)) {
+                    controller.setVariable(name, value);
+                }
+            }
+        });
+
+        parser.registerCommand('getVariable', (args) => {
+            if (args.length >= 1) {
+                const name = args[0];
+                const value = controller.getVariable(name);
+                console.log(`Variable ${name}:`, value);
+            }
+        });
+
+        parser.registerCommand('freeVariable', (args) => {
+            if (args.length >= 1) {
+                controller.freeVariable(args[0]);
+            }
+        });
+
+        parser.registerCommand('animateVariable', (args) => {
+            if (args.length >= 3) {
+                const name = args[0];
+                const fromValue = parseFloat(args[1]);
+                const toValue = parseFloat(args[2]);
+                const duration = args.length >= 4 ? parseFloat(args[3]) : 2000;
+                if (!isNaN(fromValue) && !isNaN(toValue) && !isNaN(duration)) {
+                    controller.animateVariable(name, fromValue, toValue, duration);
+                }
+            }
+        });
+
+        parser.registerCommand('stopVariableAnimation', (args) => {
+            if (args.length >= 1) {
+                controller.stopVariableAnimation(args[0]);
+            }
+        });
+
+        parser.registerCommand('plotCoordinateExpression', (args) => {
+            if (args.length >= 2) {
+                const id = args[0];
+                const coordExpr = args[1];
+                const color = args.length >= 3 ? args[2] : undefined;
+                controller.plotCoordinateExpression(id, coordExpr, color);
+            }
+        });
+
         parser.registerCommand('renderEquation', (args) => {
             const id = args[0] as string;
             const tex = args[1] as string;
@@ -409,6 +460,58 @@ export class ScriptParser {
         parser.registerCommand('freeAll', () => {
             desmos.freeAll();
             if (canvas.freeAll) canvas.freeAll();
+        });
+
+        // VARIABLE Commands
+        parser.registerCommand('setVariable', (args) => {
+            if (args.length >= 2) {
+                const name = args[0];
+                const value = parseFloat(args[1]);
+                if (!isNaN(value)) {
+                    desmos.setVariable(name, value);
+                }
+            }
+        });
+
+        parser.registerCommand('getVariable', (args) => {
+            if (args.length >= 1) {
+                const name = args[0];
+                const value = desmos.getVariable(name);
+                console.log(`Variable ${name}:`, value);
+            }
+        });
+
+        parser.registerCommand('freeVariable', (args) => {
+            if (args.length >= 1) {
+                desmos.freeVariable(args[0]);
+            }
+        });
+
+        parser.registerCommand('animateVariable', (args) => {
+            if (args.length >= 3) {
+                const name = args[0];
+                const fromValue = parseFloat(args[1]);
+                const toValue = parseFloat(args[2]);
+                const duration = args.length >= 4 ? parseFloat(args[3]) : 2000;
+                if (!isNaN(fromValue) && !isNaN(toValue) && !isNaN(duration)) {
+                    desmos.animateVariable(name, fromValue, toValue, duration);
+                }
+            }
+        });
+
+        parser.registerCommand('stopVariableAnimation', (args) => {
+            if (args.length >= 1) {
+                desmos.stopVariableAnimation(args[0]);
+            }
+        });
+
+        parser.registerCommand('plotCoordinateExpression', (args) => {
+            if (args.length >= 2) {
+                const id = args[0];
+                const coordExpr = args[1];
+                const color = args.length >= 3 ? args[2] : undefined;
+                desmos.plotCoordinateExpression(id, coordExpr, color);
+            }
         });
 
         return parser;
