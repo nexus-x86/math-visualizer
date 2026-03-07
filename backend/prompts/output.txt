@@ -2,170 +2,249 @@ resetViewport
 
 switchView "equations"
 
-renderText "title" "The Riemann Definition of Integrability" "#FFFF00" 0 0
+renderText "title" "Riemann Integrability" "#FFFF00" 0 0
 renderEquation "integral" "\int_a^b f(x)\, dx" "#58C4DD" 0 80
-say "What does it truly mean to find the area under a curve? We write this integral symbol, but for a wavy or jagged function, what does area rigorously mean?"
+renderText "sub1" "The exact area under a curve from a to b" "#83C167" 0 160
+renderText "sub2" "How do we compute a curved area using only rectangles?" "#9A72AC" 0 240
 
-renderText "sub1" "Intuition: area under the curve" "#83C167" 0 160
-say "Intuitively, we know this represents the area under the curve from a to b. But intuition alone is not mathematics."
+say "Welcome. Here is the central question of integral calculus. We want to find the exact area under a smooth, continuously changing curve — represented by this definite integral. The problem is, we only know how to compute the area of flat-sided shapes, like rectangles. How do we get from rectangles to a perfect curved area?"
+wait 2000
 
-renderText "sub2" "Problem: how do we choose rectangle heights?" "#FC6255" 0 240
-say "To approximate this area, we use rectangles. But since we can choose the height of each rectangle in many ways, we need a rule that guarantees everyone arrives at the exact same final answer."
-
-free "sub1"
-free "sub2"
 free "title"
 free "integral"
+free "sub1"
+free "sub2"
 
-switchView "desmos"
+renderText "title2" "The Core Challenge" "#FFFF00" 0 0
+renderText "line1" "We know: Area of a rectangle = height times width" "#83C167" 0 80
+renderText "line2" "We want: Area under any smooth curve f(x)" "#FC6255" 0 160
+renderText "line3" "The key idea: approximate with rectangles, then refine" "#58C4DD" 0 240
 
-zoomToPoint 3 2 7
-
-plotEquation "curve" "y=-\frac{1}{3}(x-3)^2+4" "#58C4DD"
-
-say "Here is a smooth parabolic curve over the interval from one to five. Watch what happens when we place four rectangles underneath it and move the sample point."
-
-plotEquation "rect1" "0 \le y \le -\frac{1}{3}(1+t-3)^2+4 \left\{1 \le x \le 2\right\}" "#83C167"
-plotEquation "rect2" "0 \le y \le -\frac{1}{3}(2+t-3)^2+4 \left\{2 \le x \le 3\right\}" "#83C167"
-plotEquation "rect3" "0 \le y \le -\frac{1}{3}(3+t-3)^2+4 \left\{3 \le x \le 4\right\}" "#83C167"
-plotEquation "rect4" "0 \le y \le -\frac{1}{3}(4+t-3)^2+4 \left\{4 \le x \le 5\right\}" "#83C167"
-
-animateDottedEquation "sweep" "x=1+t" "t" 0 1 "#FFFF00" 3000
-say "As the sample point sweeps from the left to the right of each sub-interval, the rectangle heights rise and fall with the function."
+say "We only have one tool: rectangles. Height times width. The central idea of Riemann integration is to approximate the curved area using rectangles, then systematically make those rectangles thinner and thinner until the error vanishes completely."
 wait 2000
-
-free "sweep"
-animateDottedEquation "sweep2" "x=2+t" "t" 0 1 "#FFFF00" 3000
-say "For a coarse grid, our area estimate wobbles depending on where we measure. We need a way to eliminate this wobble."
-wait 2000
-
-free "sweep2"
-free "rect1"
-free "rect2"
-free "rect3"
-free "rect4"
-free "curve"
-
-switchView "equations"
-
-renderText "title2" "Bounding the Truth: Darboux Sums" "#FFFF00" 0 0
-say "Instead of picking arbitrary sample points, mathematicians consider the two extreme cases."
-
-renderEquation "upper" "U_n = \sum_{i=1}^{n} M_i \,\Delta x_i \quad M_i = \sup_{x \in [x_{i-1}, x_i]} f(x)" "#FF862F" 0 80
-say "The Upper Sum uses the supremum, the highest value of f in each sub-interval, giving the largest possible rectangle area."
-
-renderEquation "lower" "L_n = \sum_{i=1}^{n} m_i \,\Delta x_i \quad m_i = \inf_{x \in [x_{i-1}, x_i]} f(x)" "#58C4DD" 0 160
-say "The Lower Sum uses the infimum, the lowest value of f in each sub-interval, giving the smallest possible rectangle area."
-
-renderEquation "squeeze" "L_n \;\le\; \int_a^b f(x)\,dx \;\le\; U_n" "#83C167" 0 240
-say "Together they trap the true area. The integral is squeezed between the Lower Sum and the Upper Sum, no matter what."
 
 free "title2"
-free "upper"
-free "lower"
-free "squeeze"
+free "line1"
+free "line2"
+free "line3"
 
 switchView "desmos"
 
-zoomToPoint 3 2 7
+zoomToPoint 2 2 8
 
-plotEquation "curve2" "y=-\frac{1}{3}(x-3)^2+4" "#58C4DD"
+plotEquation "curve" "y = 4x - x^2" "#58C4DD"
+plotEquation "shaded" "0 \le y \le 4x - x^2 \{0 \le x \le 4\}" "#58C4DD"
 
-plotEquation "lowerSum" "0 \le y \le \min\left(-\frac{1}{3}(1-3)^2+4,\,-\frac{1}{3}(2-3)^2+4\right) \left\{1 \le x \le 2\right\}" "#58C4DD"
-plotEquation "lowerSum2" "0 \le y \le \min\left(-\frac{1}{3}(2-3)^2+4,\,-\frac{1}{3}(3-3)^2+4\right) \left\{2 \le x \le 3\right\}" "#58C4DD"
-plotEquation "lowerSum3" "0 \le y \le \min\left(-\frac{1}{3}(3-3)^2+4,\,-\frac{1}{3}(4-3)^2+4\right) \left\{3 \le x \le 4\right\}" "#58C4DD"
-plotEquation "lowerSum4" "0 \le y \le \min\left(-\frac{1}{3}(4-3)^2+4,\,-\frac{1}{3}(5-3)^2+4\right) \left\{4 \le x \le 5\right\}" "#58C4DD"
-
-plotEquation "upperSum" "0 \le y \le \max\left(-\frac{1}{3}(1-3)^2+4,\,-\frac{1}{3}(2-3)^2+4\right) \left\{1 \le x \le 2\right\}" "#FF862F"
-plotEquation "upperSum2" "0 \le y \le \max\left(-\frac{1}{3}(2-3)^2+4,\,-\frac{1}{3}(3-3)^2+4\right) \left\{2 \le x \le 3\right\}" "#FF862F"
-plotEquation "upperSum3" "0 \le y \le \max\left(-\frac{1}{3}(3-3)^2+4,\,-\frac{1}{3}(4-3)^2+4\right) \left\{3 \le x \le 4\right\}" "#FF862F"
-plotEquation "upperSum4" "0 \le y \le \max\left(-\frac{1}{3}(4-3)^2+4,\,-\frac{1}{3}(5-3)^2+4\right) \left\{4 \le x \le 5\right\}" "#FF862F"
-
-say "The blue rectangles show the Lower Sum, always staying beneath the curve. The orange rectangles show the Upper Sum, always reaching above it. The gap between them is our uncertainty."
+say "Here is our curve. The shaded region underneath is the true area we want to capture. Let us build a rough approximation using just four rectangles."
 wait 2000
 
-free "lowerSum"
-free "lowerSum2"
-free "lowerSum3"
-free "lowerSum4"
-free "upperSum"
-free "upperSum2"
-free "upperSum3"
-free "upperSum4"
+setVariable "n" 4
 
-animateDottedEquation "nSweep" "x=1+t" "t" 0 4 "#FFFF00" 4000
-say "Now watch as the number of partitions grows. The rectangles become thinner and thinner."
+plotEquation "r1" "0 \le x \le 1 \{0 \le y \le 4*(1/2) - (1/2)^2\}" "#83C167"
+plotEquation "r2" "1 \le x \le 2 \{0 \le y \le 4*(3/2) - (3/2)^2\}" "#83C167"
+plotEquation "r3" "2 \le x \le 3 \{0 \le y \le 4*(5/2) - (5/2)^2\}" "#83C167"
+plotEquation "r4" "3 \le x \le 4 \{0 \le y \le 4*(7/2) - (7/2)^2\}" "#83C167"
+
+say "Here are four rectangles, each with width one. The height of each rectangle is determined by sampling the curve at a point inside that slice. Notice the gaps below the curve, and the overhangs above it. This is our rough approximation."
 wait 2000
 
-free "nSweep"
+setVariable "h" 0
+plotEquation "tracker" "x = h \{0 \le y \le 4*h - h^2\}" "#FFFF00"
+plotCoordinateExpression "samplePt" "(h, 4*h - h^2)" "#FF862F"
 
-plotEquation "lowerFine" "0 \le y \le -\frac{1}{3}(x-3)^2+4 \left\{1 \le x \le 5\right\}" "#58C4DD"
-say "As the rectangles get thinner, the Upper and Lower sums squeeze together. The gap between them vanishes, and both converge to the exact area under the curve."
+animateVariable "h" 0 1 2000
+say "Watch how we pick the sample point inside the first slice. As the point moves across the interval, it defines the height of the first rectangle."
 wait 2000
 
-free "lowerFine"
+free "tracker"
+free "samplePt"
+
+say "Each rectangle contributes a piece of the total approximation. Some overestimate, some underestimate. But this is only the beginning."
+wait 2000
+
+free "r1"
+free "r2"
+free "r3"
+free "r4"
+
+switchView "equations"
+
+renderText "step3title" "The Power of Many Slices" "#FFFF00" 0 0
+renderText "idea1" "With n equals 4 rectangles, the error is visible" "#FC6255" 0 80
+renderText "idea2" "What if we use n equals 100 slices instead?" "#FFFF00" 0 160
+renderText "idea3" "As n grows, each slice width shrinks toward zero" "#83C167" 0 240
+
+say "The key insight is refinement. Four rectangles give us a rough shape. But what happens when we use one hundred rectangles? Let us watch the approximation transform."
+wait 2000
+
+free "step3title"
+free "idea1"
+free "idea2"
+free "idea3"
+
+switchView "desmos"
+
+zoomToPoint 2 2 8
+
+plotEquation "curve2" "y = 4x - x^2" "#58C4DD"
+plotEquation "shaded2" "0 \le y \le 4x - x^2 \{0 \le x \le 4\}" "#29ABCA"
+
+setVariable "n" 4
+
+plotEquation "b1" "0 \le x \le 4/n \{0 \le y \le 4*(2/n) - (2/n)^2\}" "#83C167"
+plotEquation "b2" "4/n \le x \le 8/n \{0 \le y \le 4*(6/n) - (6/n)^2\}" "#83C167"
+plotEquation "b3" "8/n \le x \le 12/n \{0 \le y \le 4*(10/n) - (10/n)^2\}" "#83C167"
+plotEquation "b4" "12/n \le x \le 16/n \{0 \le y \le 4*(14/n) - (14/n)^2\}" "#83C167"
+plotEquation "b5" "16/n \le x \le 20/n \{0 \le y \le 4*(18/n) - (18/n)^2\}" "#83C167"
+plotEquation "b6" "20/n \le x \le 24/n \{0 \le y \le 4*(22/n) - (22/n)^2\}" "#83C167"
+plotEquation "b7" "24/n \le x \le 28/n \{0 \le y \le 4*(26/n) - (26/n)^2\}" "#83C167"
+plotEquation "b8" "28/n \le x \le 32/n \{0 \le y \le 4*(30/n) - (30/n)^2\}" "#83C167"
+
+say "We now have eight rectangles, and their combined outline already traces the curve more faithfully. Now watch what happens as we animate the number of slices upward."
+wait 2000
+
+animateVariable "n" 4 80 4000
+say "As the number of slices grows, each rectangle becomes thinner. The jagged staircase top is beginning to smooth out. The combined silhouette of all the rectangles is converging toward the smooth curve itself."
+wait 2000
+
+say "With enough slices, the visible error between the rectangles and the true curve becomes indistinguishable. This is the geometric heart of integration."
+wait 2000
+
+free "b1"
+free "b2"
+free "b3"
+free "b4"
+free "b5"
+free "b6"
+free "b7"
+free "b8"
 free "curve2"
+free "shaded2"
 
 switchView "equations"
 
-renderText "title3" "The Formal Definition of Riemann Integrability" "#FFFF00" 0 0
+renderText "rTitle" "The Riemann Sum" "#FFFF00" 0 0
+renderText "rWidth" "Width of each slice:" "#83C167" 0 80
+renderEquation "dxEq" "\Delta x = \frac{b - a}{n}" "#83C167" 0 160
 
-renderEquation "limit" "\lim_{n \to \infty} \left( U_n - L_n \right) = 0" "#FF862F" 0 80
-say "Formally, a bounded function f is Riemann integrable on the interval a to b if and only if this limit equals zero."
+say "Let us now build the algebraic formula. We slice the interval from a to b into n equal pieces. Each slice has width delta x equals b minus a divided by n."
+wait 2000
 
-renderText "def1" "If this holds, both sums converge to one unique number:" "#83C167" 0 160
-renderEquation "defInt" "U_n \to \int_a^b f(x)\,dx \leftarrow L_n" "#58C4DD" 0 240
-say "When the gap vanishes, the Upper and Lower sums both collapse to a single unambiguous value. That value is the Riemann integral."
+renderText "rHeight" "Height of one rectangle at sample point x sub i:" "#FC6255" 0 260
+renderEquation "oneRect" "f(x_i) \cdot \Delta x" "#FC6255" 0 340
 
-renderText "def2" "Continuous functions always pass this test." "#9A72AC" 0 320
-say "Any continuous function, and in fact any function with only finitely many jump discontinuities, always satisfies this condition and is therefore Riemann integrable."
+say "The height of each rectangle is the value of the function at a chosen sample point inside that slice. So the area of one rectangle is f of x sub i times delta x."
+wait 2000
 
-free "title3"
-free "limit"
-free "def1"
-free "defInt"
-free "def2"
+renderEquation "sumEq" "\sum_{i=1}^{n} f(x_i)\, \Delta x" "#FFFF00" 0 440
+
+say "Summing all n rectangles gives us the Riemann Sum. The capital sigma means we add up one rectangle for every slice from i equals one to n. This is our systematic approximation of the total area."
+wait 2000
+
+free "rTitle"
+free "rWidth"
+free "dxEq"
+free "rHeight"
+free "oneRect"
+free "sumEq"
+
+renderText "catchTitle" "But Which Height Do We Pick?" "#FFFF00" 0 0
+renderText "catchLine1" "Left endpoint? Right endpoint? Maximum? Minimum?" "#58C4DD" 0 80
+renderText "catchLine2" "Different choices give different estimates" "#FC6255" 0 160
+renderText "catchLine3" "True integrability means all choices must agree" "#83C167" 0 240
+
+say "But here is a subtle and important question. When we sample a point inside each slice, which point do we pick? The left edge? The right edge? The highest point? The lowest? Different choices give different rectangle heights, and different sums. For a function to be truly Riemann integrable, every possible choice must converge to the exact same answer."
+wait 2000
+
+free "catchTitle"
+free "catchLine1"
+free "catchLine2"
+free "catchLine3"
 
 switchView "desmos"
 
-zoomToPoint 1 1 6
+zoomToPoint 2 2 8
 
-plotEquation "dirichletHigh" "y=1 \left\{0 \le x \le 2\right\}" "#FF862F"
-plotEquation "dirichletLow" "y=0 \left\{0 \le x \le 2\right\}" "#58C4DD"
+plotEquation "curveU" "y = 4x - x^2" "#58C4DD"
 
-say "Now consider a bizarre function. It equals one at every rational number and zero at every irrational number. We can represent its two extreme values with these two lines."
+setVariable "m" 5
 
-plotEquation "upperDirichlet" "0 \le y \le 1 \left\{0 \le x \le 2\right\}" "#FF862F"
+plotEquation "up1" "0 \le x \le 4/m \{0 \le y \le 4*(4/m) - (4/m)^2\}" "#FC6255"
+plotEquation "up2" "4/m \le x \le 8/m \{0 \le y \le 4*(8/m) - (8/m)^2\}" "#FC6255"
+plotEquation "up3" "8/m \le x \le 12/m \{0 \le y \le 4*(12/m) - (12/m)^2\}" "#FC6255"
+plotEquation "up4" "12/m \le x \le 16/m \{0 \le y \le 4*(16/m) - (16/m)^2\}" "#FC6255"
+plotEquation "up5" "16/m \le x \le 20/m \{0 \le y \le 4*(20/m) - (20/m)^2\}" "#FC6255"
 
-say "Every sub-interval, no matter how tiny, contains both rational and irrational numbers. So the supremum in every interval is always one, and the infimum is always zero."
+plotEquation "lo1" "0 \le x \le 4/m \{0 \le y \le 4*(0) - (0)^2\}" "#83C167"
+plotEquation "lo2" "4/m \le x \le 8/m \{0 \le y \le 4*(4/m) - (4/m)^2\}" "#83C167"
+plotEquation "lo3" "8/m \le x \le 12/m \{0 \le y \le 4*(8/m) - (8/m)^2\}" "#83C167"
+plotEquation "lo4" "12/m \le x \le 16/m \{0 \le y \le 4*(12/m) - (12/m)^2\}" "#83C167"
+plotEquation "lo5" "16/m \le x \le 20/m \{0 \le y \le 4*(16/m) - (16/m)^2\}" "#83C167"
 
-animateDottedEquation "partSweep" "x=t" "t" 0 2 "#FFFF00" 4000
-say "Watch as we increase the number of partitions. The orange Upper Sum stays a solid block at height one."
+say "Here in red are the Upper Sums — rectangles whose heights always reach above the curve. In green are the Lower Sums — rectangles that always stay below the curve. Right now with only five slices, the gap between these two estimates is large and obvious."
 wait 2000
 
-free "partSweep"
-
-say "And the blue Lower Sum stays completely flat at height zero. No matter how many rectangles we draw, the gap never closes."
+animateVariable "m" 5 60 4000
+say "Now watch the squeeze. As we increase the number of slices, the red ceiling descends and the green floor rises. Both converge relentlessly toward the same target — the true area underneath the curve."
 wait 2000
 
-free "upperDirichlet"
-free "dirichletHigh"
-free "dirichletLow"
+say "The gap between the upper and lower sums collapses to zero. When this happens, the function is Riemann integrable. Both methods of estimation are forced to agree on the same unique number."
+wait 2000
+
+free "curveU"
+free "up1"
+free "up2"
+free "up3"
+free "up4"
+free "up5"
+free "lo1"
+free "lo2"
+free "lo3"
+free "lo4"
+free "lo5"
 
 switchView "equations"
 
-renderText "summaryTitle" "Summary: The Essence of the Integral" "#FFFF00" 0 0
+renderText "defTitle" "The Formal Definition" "#FFFF00" 0 0
+renderEquation "defEq" "\int_a^b f(x)\, dx = \lim_{n \to \infty} \sum_{i=1}^{n} f(x_i^*)\, \Delta x" "#58C4DD" 0 80
 
-renderEquation "s1" "1.\; \text{Approximate area with rectangles over a partition}" "#83C167" 0 80
-say "First: to find the area under a curve, we approximate with rectangles over a partition of the interval."
+say "Here is the rigorous definition. The definite integral is defined as the limit of the Riemann Sum as n approaches infinity. The star on x sub i star means we are free to pick any sample point inside each slice."
+wait 2000
 
-renderEquation "s2" "2.\; L_n \le \int_a^b f(x)\,dx \le U_n" "#58C4DD" 0 160
-say "Second: the true area is always trapped between the Lower Sum using minimum heights and the Upper Sum using maximum heights."
+renderText "cond1" "A function is Riemann Integrable on the interval a to b if:" "#FFFF00" 0 180
+renderText "cond2" "this limit exists and equals the same value" "#83C167" 0 260
+renderText "cond3" "for every possible choice of sample points" "#83C167" 0 340
 
-renderEquation "s3" "3.\; f \text{ is Riemann Integrable} \iff \lim_{n\to\infty}(U_n - L_n) = 0" "#FF862F" 0 240
-say "Third: a function is Riemann integrable if and only if this gap shrinks to zero in the limit."
+say "The condition for integrability is precisely this. The limit must exist, and it must give the same result no matter which sample points we choose inside the slices. Left edge, right edge, midpoint — it does not matter. All methods must converge to one identical number."
+wait 2000
 
-renderEquation "s4" "4.\; U_n - L_n \not\to 0 \implies \text{integral undefined}" "#FC6255" 0 320
-say "And fourth: if the gap never closes, as with the Dirichlet function, the Riemann integral simply does not exist."
+free "defTitle"
+free "defEq"
+free "cond1"
+free "cond2"
+free "cond3"
 
-say "Riemann integrability is ultimately a test of whether our rectangular approximations can uniquely agree on a single area. When they do, the integral is born."
+renderText "sqTitle" "The Squeeze Condition" "#FFFF00" 0 0
+renderEquation "squeeze" "L(f, P) \le \int_a^b f(x)\, dx \le U(f, P)" "#9A72AC" 0 80
+renderText "sqSub1" "Lower Sum is always less than or equal to the true area" "#83C167" 0 180
+renderText "sqSub2" "Upper Sum is always greater than or equal to the true area" "#FC6255" 0 260
+renderText "sqSub3" "When they meet, the function is integrable" "#FFFF00" 0 340
+
+say "The lower sum always underestimates. The upper sum always overestimates. The true area is always trapped between them. When these two bounds converge to a single number as the partition is refined, that number is the Riemann integral. This squeeze is both the definition and the test of integrability."
+wait 2000
+
+free "sqTitle"
+free "squeeze"
+free "sqSub1"
+free "sqSub2"
+free "sqSub3"
+
+renderText "finalTitle" "Summary" "#FFFF00" 0 0
+renderText "s1" "1. Partition the interval into n slices of width delta x" "#58C4DD" 0 80
+renderText "s2" "2. Sample the curve height in each slice" "#58C4DD" 0 160
+renderText "s3" "3. Sum the rectangle areas: the Riemann Sum" "#58C4DD" 0 240
+renderText "s4" "4. Take the limit as n approaches infinity" "#58C4DD" 0 320
+renderText "s5" "5. If upper and lower sums agree, the function is integrable" "#FFFF00" 0 400
+
+say "To summarize. Partition the interval. Sample the curve. Sum the rectangles. Take the limit. If every possible sampling strategy converges to the same number, the function is Riemann integrable, and that number is the exact area under the curve. Infinitely many infinitely thin rectangles turn a rough approximation into a perfect, rigorous answer."
+wait 2000

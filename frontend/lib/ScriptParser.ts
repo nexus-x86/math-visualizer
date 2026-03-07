@@ -134,6 +134,12 @@ export class ScriptParser {
             }
         });
 
+        parser.registerCommand('free', (args) => {
+            if (args.length >= 1) {
+                controller.freeItem(args[0]);
+            }
+        });
+
         parser.registerCommand('freeAll', () => {
             controller.freeAll();
         });
@@ -455,6 +461,14 @@ export class ScriptParser {
         parser.registerCommand('resetViewport', () => {
             desmos.resetViewport();
             if (canvas.resetViewport) canvas.resetViewport();
+        });
+
+        parser.registerCommand('free', (args) => {
+            if (args.length >= 1) {
+                const id = args[0];
+                desmos.freeItem(id);
+                if (canvas.freeEquation) canvas.freeEquation(id);
+            }
         });
 
         parser.registerCommand('freeAll', () => {

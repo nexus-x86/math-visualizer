@@ -242,13 +242,17 @@ plotEquation "secant" "y-1=((1+h)^2-1)/h*(x-1)" "#83C167"
 animateVariable "h" 1 0.01 4000
 ```
 
-**Riemann Sum Refinement:**
+**Riemann Sum Refinement (Fixed Rectangle Count):**
 ```text
-setVariable "n" 2
-plotEquation "rect1" "0 \le x \le 2/n \{0 \le y \le (2/n)^2\}" "#83C167"
-plotEquation "rect2" "2/n \le x \le 4/n \{0 \le y \le (4/n)^2\}" "#83C167"
-animateVariable "n" 2 16 4000
+setVariable "n" 4
+plotEquation "rect1" "0 \le x \le 2/n \{0 \le y \le (0*2/n)^2\}" "#83C167"
+plotEquation "rect2" "2/n \le x \le 4/n \{0 \le y \le (1*2/n)^2\}" "#83C167"
+plotEquation "rect3" "4/n \le x \le 6/n \{0 \le y \le (2*2/n)^2\}" "#83C167"
+plotEquation "rect4" "6/n \le x \le 8/n \{0 \le y \le (3*2/n)^2\}" "#83C167"
+animateVariable "n" 4 16 4000
 ```
+
+**IMPORTANT LIMITATION:** Desmos cannot dynamically create/destroy objects. You must pre-define all rectangles, points, or equations you want to use. As `n` increases, rectangles get narrower but the count stays fixed.
 
 **Multiple Synchronized Oscillators:**
 ```text
@@ -282,6 +286,15 @@ Always use `animateVariable` instead of the old `animateCoordinate` or `animateD
 3. Create all objects using expressions with that variable
 4. Use `animateVariable` to drive the animation
 5. Let mathematics handle the synchronization automatically
+
+**CRITICAL DESMOS CONSTRAINTS:**
+
+- **No Dynamic Object Creation**: You cannot create objects during runtime. All equations, coordinates, and rectangles must be pre-defined.
+- **Fixed Object Count**: For Riemann sums, define a fixed number of rectangles (e.g., 4 or 8). As `n` changes, they get narrower, not more numerous.
+- **No Loops**: There are no `for` loops or `repeat` constructs. Each object needs an explicit command.
+- **Variable Animation Only**: The power is in animating variables that drive pre-existing objects, not in creating new objects dynamically.
+
+**Work within these limits** by pre-defining enough objects for your visualization needs.
 
 ---
 
