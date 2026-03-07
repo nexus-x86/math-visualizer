@@ -12,3 +12,5 @@ docker-up:
 
 docker-down:
 	docker-compose down
+docker-run:
+	docker-compose up --build -d
