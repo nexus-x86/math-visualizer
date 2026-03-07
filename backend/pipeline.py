@@ -16,10 +16,10 @@ Your goal is to take the user's message/question about calculus and design a com
 
 Instructions:
 1. Analyze what concepts needed to be shown in calculus.
-2. Analyze visualizations it needs to do.
+2. Analyze the visual transitions needed between the graphing view ("desmos") and the step-by-step math view ("equations").
 3. Analyze what it needs to explain to the user.
-4. List the graphs that are needed.
-5. Provide 5-8 points on what is needed to show the thing.
+4. List the graphs and equations that are needed.
+5. Provide 5-8 points on what is needed to show the overall concept, explicitly indicating when to transition between graph and equation views.
 6. For each point, state what it should be demonstrating to the user.
 
 Think deeply: "What are we teaching, and what must happen overall?"
@@ -27,7 +27,7 @@ Think deeply: "What are we teaching, and what must happen overall?"
 
 INTERPRETER_PROMPT = """
 You are the Interpreter. Your job is to generate a 'Desp' script based on the Planner's instructions.
-A 'Desp' script is a specialized plaintext scripting language to animate math inside the Desmos Graphing Calculator.
+A 'Desp' script is a specialized plaintext scripting language to animate math inside the Desmos Graphing Calculator and an Equation Canvas.
 
 Here are the rules for Desp:
 {robot_md}
@@ -36,6 +36,7 @@ CRITICAL RULES:
 - ONLY output valid Desp script text. Do not wrap your response in markdown code blocks. Every valid command must be on its own line.
 - The `say` command MUST ONLY output human readable and TTS-friendly language. ABSOLUTELY NO LaTeX output in the `say` command. Speak naturally to the student.
 - Make sure to choose colors for your lines, curves, and points that have high contrast and are clearly visible against a white background (e.g., use vibrant or dark colors, avoid white or very light yellow).
+- Use `switchView "desmos"` and `switchView "equations"` to seamlessly transition between the graph and the equations view when specified by the plan.
 - Simply execute whatever the plan specified to create the instructions.
 """
 
@@ -97,12 +98,12 @@ def run_pipeline(user_message: str):
     plan = generate_gemini_response(planner_payload)
     print("--- [1] Planner Phase Done ---\n")
 
-    # # Step 2: Interpreter
-    # print("--- [2] Interpreter Phase Started ---")
-    # interpreter_prompt = INTERPRETER_PROMPT.format(robot_md=robot_md)
-    # interpreter_payload = f"SYSTEM SETUP: {interpreter_prompt}\n\nPLANNER OUTPUT:\n{plan}"
-    # script_v1 = generate_gemini_response(interpreter_payload)
-    # print("--- [2] Interpreter Phase Done ---\n")
+    # Step 2: Interpreter
+    print("--- [2] Interpreter Phase Started ---")
+    interpreter_prompt = INTERPRETER_PROMPT.format(robot_md=robot_md)
+    interpreter_payload = f"SYSTEM SETUP: {interpreter_prompt}\n\nPLANNER OUTPUT:\n{plan}"
+    script_v1 = generate_gemini_response(interpreter_payload)
+    print("--- [2] Interpreter Phase Done ---\n")
 
     # # Step 3: Validator
     # print("--- [3] Validator Phase Started ---")
@@ -146,11 +147,11 @@ def run_pipeline(user_message: str):
     # validator_final_payload = f"SYSTEM SETUP: {VALIDATOR_PROMPT}\n\nCURRENT SCRIPT TO EVALUATE:\n{script_v3}"
     # validation_final_feedback = generate_gemini_response(validator_final_payload)
     # print("--- [9] Validator (Final Check) Phase Done ---\n")
-
+    print(plan)
     print("\n\n==================================================")
     print("FINAL DESP SCRIPT (script_v2):")
     print("==================================================")
-    print(plan)
+    print(script_v1)
     print("==================================================\n")
 
     end_time = time.time()
