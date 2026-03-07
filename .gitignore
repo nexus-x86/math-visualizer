@@ -47,3 +47,5 @@ venv/
 .env
 .env.*
 !.env.example
+
+desmos_test
