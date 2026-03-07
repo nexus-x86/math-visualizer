@@ -229,6 +229,24 @@ export class ScriptParser {
             }
         });
 
+        parser.registerCommand('createObjectGroup', (args) => {
+            if (args.length >= 4) {
+                const groupId = args[0];
+                const template = args[1];
+                const countVar = args[2];
+                const prefix = args[3];
+                const maxCount = args.length >= 5 ? parseInt(args[4]) : 50;
+                const color = args.length >= 6 ? args[5] : undefined;
+                controller.createObjectGroup(groupId, template, countVar, prefix, maxCount, color);
+            }
+        });
+
+        parser.registerCommand('freeObjectGroup', (args) => {
+            if (args.length >= 1) {
+                controller.freeObjectGroup(args[0]);
+            }
+        });
+
         parser.registerCommand('renderEquation', (args) => {
             const id = args[0] as string;
             const tex = args[1] as string;
@@ -525,6 +543,24 @@ export class ScriptParser {
                 const coordExpr = args[1];
                 const color = args.length >= 3 ? args[2] : undefined;
                 desmos.plotCoordinateExpression(id, coordExpr, color);
+            }
+        });
+
+        parser.registerCommand('createObjectGroup', (args) => {
+            if (args.length >= 4) {
+                const groupId = args[0];
+                const template = args[1];
+                const countVar = args[2];
+                const prefix = args[3];
+                const maxCount = args.length >= 5 ? parseInt(args[4]) : 50;
+                const color = args.length >= 6 ? args[5] : undefined;
+                desmos.createObjectGroup(groupId, template, countVar, prefix, maxCount, color);
+            }
+        });
+
+        parser.registerCommand('freeObjectGroup', (args) => {
+            if (args.length >= 1) {
+                desmos.freeObjectGroup(args[0]);
             }
         });
 

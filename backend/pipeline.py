@@ -11,7 +11,7 @@ claude_client = anthropic.Anthropic(api_key=os.environ.get("CLAUDE_API_KEY"))
 gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 gemini_model = "gemini-3.1-pro-preview"
-claude_model = "claude-sonnet-4-6"
+claude_model = "claude-opus-4-6"
 
 PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "prompts")
 
@@ -44,9 +44,8 @@ def run_pipeline(user_message: str):
     start_time = time.time()
 
     # Read all prompt files
-    robot_md = read_root_file("robot.md")
+    robot_md = read_file("merged.md")
     planner_prompt = read_file("planning.md")
-    validator_prompt = read_file("validator.md")
 
     # Step 1: Planner (Gemini Pro)
     print("--- [1] Planner Phase Started (Gemini Pro) ---")
@@ -55,35 +54,35 @@ def run_pipeline(user_message: str):
     print("--- [1] Planner Phase Done ---\n")
 
     # Step 2: Interpreter (Claude Sonnet)
-    print("--- [2] Interpreter Phase Started (Claude Sonnet) ---")
+    print("--- [2] Interpreter Phase Started (Claude OPUS) ---")
     interpreter_payload = f"{robot_md}\n\nPLANNER OUTPUT:\n{plan}"
     script_v1 = generate_claude_response(interpreter_payload)
     print("--- [2] Interpreter Phase Done ---\n")
 
-    # Step 3: Validator (Claude Sonnet)
-    print("--- [3] Validator Phase Started (Claude Sonnet) ---")
-    validator_payload = f"{validator_prompt}\n\nDESP LANGUAGE REFERENCE:\n{robot_md}\n\nCURRENT SCRIPT TO VALIDATE AND CORRECT:\n{script_v1}"
-    final_script = generate_claude_response(validator_payload)
-    print("--- [3] Validator Phase Done ---\n")
+    # # Step 3: Validator (Claude Sonnet)
+    # print("--- [3] Validator Phase Started (Claude Sonnet) ---")
+    # validator_payload = f"{validator_prompt}\n\nDESP LANGUAGE REFERENCE:\n{robot_md}\n\nCURRENT SCRIPT TO VALIDATE AND CORRECT:\n{script_v1}"
+    # final_script = generate_claude_response(validator_payload)
+    # print("--- [3] Validator Phase Done ---\n")
 
-    print(plan)
-    print("\n\n==================================================")
-    print("FINAL DESP SCRIPT (validated):")
-    print("==================================================")
-    print(final_script)
-    print("==================================================\n")
+    # print(plan)
+    # print("\n\n==================================================")
+    # print("FINAL DESP SCRIPT (validated):")
+    # print("==================================================")
+    # print(final_script)
+    # print("==================================================\n")
 
     # Write final script to output.txt
     output_path = os.path.join(os.path.dirname(__file__), "prompts", "output.txt")
     with open(output_path, "w") as f:
-        f.write(final_script)
+        f.write(script_v1)
     print(f"Script written to {output_path}")
 
     end_time = time.time()
     print(f"Total time elapsed: {end_time - start_time:.2f} seconds\n")
 
-    return final_script
+    return script_v1
 
 if __name__ == "__main__":
-    test_msg = "explain to me the riemann definition of integrability"
+    test_msg = "explain the central limit theorem in statistics"
     run_pipeline(test_msg)

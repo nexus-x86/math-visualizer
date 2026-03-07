@@ -11,6 +11,14 @@ export class DesmosController {
         duration: number,
         frameId: number
     }> = new Map();
+    private objectGroups: Map<string, {
+        prefix: string,
+        template: string,
+        countVar: string,
+        currentCount: number,
+        maxCount: number,
+        color?: string
+    }> = new Map();
 
     // State Tracking for camera animations
     private targetCenterX: number | null = null;
@@ -80,8 +88,9 @@ export class DesmosController {
         });
         this.trackedIds.clear();
 
-        // Clear variables
+        // Clear variables and object groups
         this.clearVariables();
+        this.clearObjectGroups();
 
         // Also remove default items just in case
         this.calculator.removeExpression({ id: 'user-equation' });
@@ -403,6 +412,9 @@ export class DesmosController {
 
         this.globalVariables.set(name, value);
         this.trackedIds.add(`var-${name}`);
+
+        // Update object groups that depend on this variable
+        this.updateAllObjectGroups();
     }
 
     /**
@@ -554,5 +566,136 @@ export class DesmosController {
             color: color || '#10bbbb'
         });
         this.trackedIds.add(id);
+    }
+
+    /**
+     * Creates multiple objects at once - simple version that actually works
+     */
+    public createObjectGroup(groupId: string, template: string, countVar: string, prefix: string, maxCount: number = 50, color?: string) {
+        if (!this.calculator) return;
+
+        console.log("Creating object group:", groupId, template, countVar);
+
+        const count = Math.floor(this.globalVariables.get(countVar) || 0);
+        console.log("Initial count:", count);
+
+        // Create objects immediately
+        for (let i = 0; i < Math.min(count, maxCount); i++) {
+            const objId = `${prefix}${i}`;
+            const latex = template.replace(/\{i\}/g, i.toString());
+
+            console.log("Creating object:", objId);
+            console.log("Original template:", template);
+            console.log("Final LaTeX:", latex);
+            console.log("---");
+
+            this.calculator.setExpression({
+                id: objId,
+                latex: latex,
+                color: color || '#83C167'
+            });
+            this.trackedIds.add(objId);
+        }
+
+        // Store group info
+        this.objectGroups.set(groupId, {
+            prefix,
+            template,
+            countVar,
+            currentCount: count,
+            maxCount,
+            color
+        });
+    }
+
+    /**
+     * Expands template with index and variable substitutions
+     */
+    private expandTemplate(template: string, index: number): string {
+        if (!template) return '';
+
+        // Replace {i} with current index
+        let expanded = template.replace(/\{i\}/g, index.toString());
+
+        // Support common Riemann patterns
+        expanded = expanded.replace(/\{start\}/g, `${index}*2/n`);
+        expanded = expanded.replace(/\{end\}/g, `${index + 1}*2/n`);
+        expanded = expanded.replace(/\{height\}/g, `(${index}*2/n)^2`);
+
+        return expanded;
+    }
+
+    /**
+     * Updates objects in a group based on current variable values
+     */
+    private updateObjectGroup(groupId: string) {
+        const group = this.objectGroups.get(groupId);
+        if (!group || !this.calculator) return;
+
+        const targetCount = Math.min(
+            Math.max(0, Math.floor(this.globalVariables.get(group.countVar) || 0)),
+            group.maxCount
+        );
+
+        // Remove excess objects if count decreased
+        if (targetCount < group.currentCount) {
+            for (let i = targetCount; i < group.currentCount; i++) {
+                const objId = `${group.prefix}${i}`;
+                this.calculator.removeExpression({ id: objId });
+                this.trackedIds.delete(objId);
+            }
+        }
+
+        // Add new objects if count increased
+        if (targetCount > group.currentCount) {
+            for (let i = group.currentCount; i < targetCount; i++) {
+                const objId = `${group.prefix}${i}`;
+                const latex = this.expandTemplate(group.template, i);
+
+                this.calculator.setExpression({
+                    id: objId,
+                    latex: latex,
+                    color: group.color || '#83C167'
+                });
+                this.trackedIds.add(objId);
+            }
+        }
+
+        group.currentCount = targetCount;
+    }
+
+    /**
+     * Updates all object groups when variables change
+     */
+    private updateAllObjectGroups() {
+        this.objectGroups.forEach((_, groupId) => {
+            this.updateObjectGroup(groupId);
+        });
+    }
+
+    /**
+     * Removes an object group and all its generated objects
+     */
+    public freeObjectGroup(groupId: string) {
+        const group = this.objectGroups.get(groupId);
+        if (!group || !this.calculator) return;
+
+        // Remove all generated objects
+        for (let i = 0; i < group.currentCount; i++) {
+            const objId = `${group.prefix}${i}`;
+            this.calculator.removeExpression({ id: objId });
+            this.trackedIds.delete(objId);
+        }
+
+        this.objectGroups.delete(groupId);
+    }
+
+    /**
+     * Clears all object groups
+     */
+    public clearObjectGroups() {
+        this.objectGroups.forEach((_, groupId) => {
+            this.freeObjectGroup(groupId);
+        });
     }
 }
