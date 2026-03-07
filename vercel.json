@@ -13,10 +13,6 @@
     "routes": [
         {
             "src": "/api/query",
-            "methods": [
-                "POST",
-                "OPTIONS"
-            ],
             "dest": "backend/main.py"
         },
         {

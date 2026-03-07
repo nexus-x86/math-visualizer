@@ -12,9 +12,7 @@ async def root():
     return {"status": "ok", "message": "Math Visualizer API is running"}
 
 # Allow CORS for Next.js frontend (default port 3000)
-origins = [
-    "http://localhost:3000",
-]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,

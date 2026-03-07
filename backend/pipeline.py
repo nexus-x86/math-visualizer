@@ -73,10 +73,10 @@ def run_pipeline(user_message: str):
     # print("==================================================\n")
 
     # Write final script to output.txt
-    output_path = os.path.join(os.path.dirname(__file__), "prompts", "output.txt")
-    with open(output_path, "w") as f:
-        f.write(script_v1)
-    print(f"Script written to {output_path}")
+    # output_path = os.path.join(os.path.dirname(__file__), "prompts", "output.txt")
+    # with open(output_path, "w") as f:
+    #     f.write(script_v1)
+    # print(f"Script written to {output_path}")
 
     end_time = time.time()
     print(f"Total time elapsed: {end_time - start_time:.2f} seconds\n")
