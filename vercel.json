@@ -20,6 +20,10 @@
             "dest": "frontend/app/api/tts/route.ts"
         },
         {
+            "src": "/api/(.*)",
+            "dest": "backend/main.py"
+        },
+        {
             "src": "/(.*)",
             "dest": "frontend/$1"
         }

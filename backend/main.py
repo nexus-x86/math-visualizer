@@ -28,6 +28,7 @@ app.add_middleware(
 class QueryRequest(BaseModel):
     query: str
 
+@app.post("/")
 @app.post("/api/query")
 async def process_query(req: QueryRequest):
     print(f"Received query: {req.query}")
