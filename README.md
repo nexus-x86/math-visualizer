@@ -4,3 +4,6 @@ This is a math visualizer that brings concepts to life such as delta epsilon pro
 
 ## Setup
 Please see `setup.md` for both Docker and Manual installation instructions.
+
+
+# Architecture
