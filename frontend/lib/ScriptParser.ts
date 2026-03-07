@@ -96,7 +96,12 @@ export class ScriptParser {
         const parser = new ScriptParser();
 
         parser.registerCommand('wait', async (args) => {
-            const ms = parseFloat(args[0] as string);
+            let ms = parseFloat(args[0] as string);
+
+            if (ms > 3000) {
+                ms = 3000;
+            }
+
             if (!isNaN(ms)) {
                 await new Promise(resolve => setTimeout(resolve, ms));
             }
@@ -126,6 +131,12 @@ export class ScriptParser {
                 if ((controller as any).freeEquation) {
                     (controller as any).freeEquation(args[0]);
                 }
+            }
+        });
+
+        parser.registerCommand('free', (args) => {
+            if (args.length >= 1) {
+                controller.freeItem(args[0]);
             }
         });
 
@@ -167,9 +178,91 @@ export class ScriptParser {
             controller.resetViewport();
         });
 
+        parser.registerCommand('setVariable', (args) => {
+            if (args.length >= 2) {
+                const name = args[0];
+                const value = parseFloat(args[1]);
+                if (!isNaN(value)) {
+                    controller.setVariable(name, value);
+                }
+            }
+        });
+
+        parser.registerCommand('getVariable', (args) => {
+            if (args.length >= 1) {
+                const name = args[0];
+                const value = controller.getVariable(name);
+                console.log(`Variable ${name}:`, value);
+            }
+        });
+
+        parser.registerCommand('freeVariable', (args) => {
+            if (args.length >= 1) {
+                controller.freeVariable(args[0]);
+            }
+        });
+
+        parser.registerCommand('animateVariable', (args) => {
+            if (args.length >= 3) {
+                const name = args[0];
+                const fromValue = parseFloat(args[1]);
+                const toValue = parseFloat(args[2]);
+                const duration = args.length >= 4 ? parseFloat(args[3]) : 2000;
+                if (!isNaN(fromValue) && !isNaN(toValue) && !isNaN(duration)) {
+                    controller.animateVariable(name, fromValue, toValue, duration);
+                }
+            }
+        });
+
+        parser.registerCommand('stopVariableAnimation', (args) => {
+            if (args.length >= 1) {
+                controller.stopVariableAnimation(args[0]);
+            }
+        });
+
+        parser.registerCommand('plotCoordinateExpression', (args) => {
+            if (args.length >= 2) {
+                const id = args[0];
+                const coordExpr = args[1];
+                const color = args.length >= 3 ? args[2] : undefined;
+                controller.plotCoordinateExpression(id, coordExpr, color);
+            }
+        });
+
+        parser.registerCommand('createObjectGroup', (args) => {
+            if (args.length >= 4) {
+                const groupId = args[0];
+                const template = args[1];
+                const countVar = args[2];
+                const prefix = args[3];
+                const maxCount = args.length >= 5 ? parseInt(args[4]) : 50;
+                const color = args.length >= 6 ? args[5] : undefined;
+                controller.createObjectGroup(groupId, template, countVar, prefix, maxCount, color);
+            }
+        });
+
+        parser.registerCommand('freeObjectGroup', (args) => {
+            if (args.length >= 1) {
+                controller.freeObjectGroup(args[0]);
+            }
+        });
+
         parser.registerCommand('renderEquation', (args) => {
             const id = args[0] as string;
             const tex = args[1] as string;
+            const color = (args[2] as string) || '#ffffff';
+            const offsetX = args[3] !== undefined ? parseFloat(args[3] as string) : 0;
+            const offsetY = args[4] !== undefined ? parseFloat(args[4] as string) : 0;
+
+            if ((controller as any).renderEquation) {
+                (controller as any).renderEquation(id, tex, color, offsetX, offsetY);
+            }
+        });
+
+        parser.registerCommand('renderText', (args) => {
+            const id = args[0] as string;
+            const text = args[1] as string;
+            const tex = `\\text{${text}}`;
             const color = (args[2] as string) || '#ffffff';
             const offsetX = args[3] !== undefined ? parseFloat(args[3] as string) : 0;
             const offsetY = args[4] !== undefined ? parseFloat(args[4] as string) : 0;
@@ -232,6 +325,9 @@ export class ScriptParser {
 
         parser.registerCommand('switchView', (args) => {
             if (args.length > 0) {
+                // Clear all contents from both views before switching
+                desmos.freeAll();
+                if (canvas.freeAll) canvas.freeAll();
                 setView(args[0]);
             }
         });
@@ -318,6 +414,16 @@ export class ScriptParser {
             if (canvas.renderEquation) canvas.renderEquation(id, tex, color, offsetX, offsetY);
         });
 
+        parser.registerCommand('renderText', (args) => {
+            const id = args[0] as string;
+            const text = args[1] as string;
+            const tex = `\\text{${text}}`;
+            const color = (args[2] as string) || '#ffffff';
+            const offsetX = args[3] !== undefined ? parseFloat(args[3] as string) : 0;
+            const offsetY = args[4] !== undefined ? parseFloat(args[4] as string) : 0;
+            if (canvas.renderEquation) canvas.renderEquation(id, tex, color, offsetX, offsetY);
+        });
+
         parser.registerCommand('transformEquation', async (args) => {
             const id = args[0] as string;
             const tex = args[1] as string;
@@ -375,9 +481,87 @@ export class ScriptParser {
             if (canvas.resetViewport) canvas.resetViewport();
         });
 
+        parser.registerCommand('free', (args) => {
+            if (args.length >= 1) {
+                const id = args[0];
+                desmos.freeItem(id);
+                if (canvas.freeEquation) canvas.freeEquation(id);
+            }
+        });
+
         parser.registerCommand('freeAll', () => {
             desmos.freeAll();
             if (canvas.freeAll) canvas.freeAll();
+        });
+
+        // VARIABLE Commands
+        parser.registerCommand('setVariable', (args) => {
+            if (args.length >= 2) {
+                const name = args[0];
+                const value = parseFloat(args[1]);
+                if (!isNaN(value)) {
+                    desmos.setVariable(name, value);
+                }
+            }
+        });
+
+        parser.registerCommand('getVariable', (args) => {
+            if (args.length >= 1) {
+                const name = args[0];
+                const value = desmos.getVariable(name);
+                console.log(`Variable ${name}:`, value);
+            }
+        });
+
+        parser.registerCommand('freeVariable', (args) => {
+            if (args.length >= 1) {
+                desmos.freeVariable(args[0]);
+            }
+        });
+
+        parser.registerCommand('animateVariable', (args) => {
+            if (args.length >= 3) {
+                const name = args[0];
+                const fromValue = parseFloat(args[1]);
+                const toValue = parseFloat(args[2]);
+                const duration = args.length >= 4 ? parseFloat(args[3]) : 2000;
+                if (!isNaN(fromValue) && !isNaN(toValue) && !isNaN(duration)) {
+                    desmos.animateVariable(name, fromValue, toValue, duration);
+                }
+            }
+        });
+
+        parser.registerCommand('stopVariableAnimation', (args) => {
+            if (args.length >= 1) {
+                desmos.stopVariableAnimation(args[0]);
+            }
+        });
+
+        parser.registerCommand('plotCoordinateExpression', (args) => {
+            if (args.length >= 2) {
+                const id = args[0];
+                const coordExpr = args[1];
+                const color = args.length >= 3 ? args[2] : undefined;
+                desmos.plotCoordinateExpression(id, coordExpr, color);
+            }
+        });
+
+        parser.registerCommand('createObjectGroup', (args) => {
+            if (args.length >= 4) {
+                const groupId = args[0];
+                const template = args[1];
+                const countVar = args[2];
+                const prefix = args[3];
+                const maxCount = args.length >= 5 ? parseInt(args[4]) : 50;
+                const color = args.length >= 6 ? args[5] : undefined;
+                desmos.createObjectGroup(groupId, template, countVar, prefix, maxCount, color);
+            }
+        });
+
+        parser.registerCommand('freeObjectGroup', (args) => {
+            if (args.length >= 1) {
+                desmos.freeObjectGroup(args[0]);
+            }
         });
 
         return parser;

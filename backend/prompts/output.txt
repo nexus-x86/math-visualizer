@@ -1,0 +1,91 @@
+resetViewport
+switchView "equations"
+renderText "title" "The Central Limit Theorem" "#FFFF00" 0 -40
+say "The Central Limit Theorem is one of the most beautiful and powerful ideas in all of mathematics."
+renderEquation "intro1" "\bar{X} = \frac{1}{n}\sum_{i=1}^{n} X_i" "#58C4DD" 0 60
+say "If you take random samples from ANY population and average them..."
+renderEquation "intro2" "\bar{X} \sim N\left(\mu,\ \frac{\sigma^2}{n}\right)" "#83C167" 0 160
+say "the distribution of those averages will approach a Normal distribution, a bell curve, no matter what the original population looks like."
+wait 1500
+renderText "key" "This works for ANY starting distribution!" "#FC6255" 0 260
+say "This works for any starting distribution. Let me show you why."
+say "Let's start with a population that looks absolutely nothing like a bell curve."
+switchView "desmos"
+resetViewport
+zoomToPoint 0.5 0.7 2
+say "Imagine picking a random number between zero and one. Every outcome is equally likely."
+plotEquation "floor" "y=0\ \{x<0\}" "#58C4DD"
+plotEquation "uniform" "y=1\ \{0 \le x \le 1\}" "#58C4DD"
+plotEquation "floor2" "y=0\ \{x>1\}" "#58C4DD"
+plotEquation "leftWall" "x=0\ \{0 \le y \le 1\}" "#58C4DD"
+plotEquation "rightWall" "x=1\ \{0 \le y \le 1\}" "#58C4DD"
+say "This is a Uniform distribution. Completely flat. No bump in the middle, no bell shape whatsoever."
+setVariable "s" 0
+plotCoordinateExpression "scanner" "(s, 1)" "#FFFF00"
+animateVariable "s" 0 1 2000
+say "Every single value from zero to one is equally likely to be chosen. This is our starting point, with a sample size of one."
+wait 2000
+stopVariableAnimation "s"
+free "scanner"
+freeVariable "s"
+say "Now, what happens to the probabilities if we pick TWO numbers and average them?"
+free "uniform"
+free "floor"
+free "floor2"
+free "leftWall"
+free "rightWall"
+zoomToPoint 0.5 1.2 2
+setVariable "t" 0
+plotEquation "triLeft" "y=2*x*t\ \{0 \le x \le 0.5\}" "#FC6255"
+plotEquation "triRight" "y=2*(1-x)*t\ \{0.5 \le x \le 1\}" "#FC6255"
+plotEquation "flatLeft" "y=1*(1-t)\ \{0 \le x \le 1\}" "#58C4DD"
+animateVariable "t" 0 1 3000
+say "Watch the flat rectangle morph into a triangle! When n equals two, the middle value of one half becomes the most likely average."
+wait 2000
+say "To get an average of one, BOTH numbers must be one. That's very rare. But to get an average of one half, you can mix a high and a low number in many ways. So the middle is common."
+stopVariableAnimation "t"
+free "flatLeft"
+freeVariable "t"
+say "Now let's watch what happens as we average even more numbers together."
+free "triLeft"
+free "triRight"
+zoomToPoint 0.5 0 4
+setVariable "n" 2
+plotEquation "bellCurve" "y=\sqrt{n/(2*\pi*(1/12))}*e^{-n*(x-0.5)^2/(2*(1/12))}" "#58C4DD"
+say "As n increases, averaging more and more numbers, the shape rounds off and gets narrower and taller."
+animateVariable "n" 2 12 5000
+say "The sharp triangle softens into a smooth curve. The tails thin out. The peak rises. This is the Central Limit Theorem happening before your eyes."
+wait 2000
+say "Notice how the curve squeezes inward. This is sigma squared over n in action. More data means less variation in the average."
+wait 1500
+stopVariableAnimation "n"
+say "Because it's getting so narrow, let's zoom in and standardize our view to focus purely on the shape."
+setVariable "n" 12
+animateVariable "n" 12 30 4000
+zoomToPoint 0.5 0 1.5
+say "By zooming in as the curve narrows, we can see the shape more clearly. This is like computing a Z score in statistics, standardizing to focus on the form, not the scale."
+wait 2000
+stopVariableAnimation "n"
+say "Does this shape perfectly match a mathematical Normal distribution? Let's find out."
+setVariable "n" 30
+plotEquation "normalOverlay" "y=\sqrt{30/(2*\pi*(1/12))}*e^{-30*(x-0.5)^2/(2*(1/12))}" "#FFFF00"
+animateDottedEquation "sweepNormal" "x=a\ \{0 \le y \le \sqrt{30/(2*\pi*(1/12))}*e^{-30*(a-0.5)^2/(2*(1/12))}\}" "a" 0 1 "#FFFF00" 3000
+say "The yellow dotted line is the exact mathematical Normal distribution. Watch it sweep across and perfectly trace our curve."
+wait 2000
+say "They are a perfect match. We started with a completely flat box, and by simply averaging, we arrived at the most famous curve in mathematics."
+wait 1500
+free "sweepNormal"
+free "normalOverlay"
+free "bellCurve"
+freeVariable "n"
+switchView "equations"
+renderText "title2" "Why This Matters" "#FFFF00" 0 -40
+say "Let's summarize why the Central Limit Theorem is one of the most powerful ideas in all of science."
+renderText "line1" "We do NOT need to know the shape of the original population." "#FC6255" 0 60
+say "We do not need to know the shape of the original population."
+renderEquation "flow1" "\text{Any Distribution} \longrightarrow \bar{X}_n \longrightarrow N\!\left(\mu,\;\frac{\sigma^2}{n}\right)" "#58C4DD" 0 160
+say "Take any distribution, compute sample means, and the result is Normal."
+renderText "line2" "This unlocks probability calculations for almost anything." "#83C167" 0 260
+say "This unlocks probability calculations for virtually any dataset in the world. Polls, experiments, quality control, medicine, all rely on this single theorem."
+renderEquation "final" "P\!\left(\bar{X} \in [a,b]\right) = \int_a^b \frac{1}{\sigma\sqrt{2\pi/n}}\,e^{-\frac{n(x-\mu)^2}{2\sigma^2}}\,dx" "#9A72AC" 0 360
+say "Because of the Central Limit Theorem, we can always write down this integral and compute exact probabilities. That is the magic of averages."

@@ -3,6 +3,22 @@ export class DesmosController {
     private animationRef: number | null = null;
     private customAnimRefs: Set<number> = new Set();
     private trackedIds: Set<string> = new Set();
+    private globalVariables: Map<string, number> = new Map();
+    private variableAnimations: Map<string, {
+        startValue: number,
+        endValue: number,
+        startTime: number,
+        duration: number,
+        frameId: number
+    }> = new Map();
+    private objectGroups: Map<string, {
+        prefix: string,
+        template: string,
+        countVar: string,
+        currentCount: number,
+        maxCount: number,
+        color?: string
+    }> = new Map();
 
     // State Tracking for camera animations
     private targetCenterX: number | null = null;
@@ -72,6 +88,10 @@ export class DesmosController {
         });
         this.trackedIds.clear();
 
+        // Clear variables and object groups
+        this.clearVariables();
+        this.clearObjectGroups();
+
         // Also remove default items just in case
         this.calculator.removeExpression({ id: 'user-equation' });
         this.calculator.removeExpression({ id: 'user-point' });
@@ -95,6 +115,9 @@ export class DesmosController {
         }
         this.customAnimRefs.forEach(cancelAnimationFrame);
         this.customAnimRefs.clear();
+
+        // Stop all variable animations
+        this.stopAllVariableAnimations();
 
         // Reset target tracking variables when animations are cancelled
         this.targetCenterX = null;
@@ -371,5 +394,308 @@ export class DesmosController {
         this.targetViewportWidth = endViewportWidth;
 
         this.animationRef = requestAnimationFrame(animate);
+    }
+
+    /**
+     * Sets a global variable that can be used across expressions.
+     * @param name The name of the global variable.
+     * @param value The value to assign to the variable.
+     */
+    public setVariable(name: string, value: number) {
+        if (!this.calculator || !name) return;
+
+        this.calculator.setExpression({
+            id: `var-${name}`,
+            latex: `${name}=${value}`,
+            secret: true
+        });
+
+        this.globalVariables.set(name, value);
+        this.trackedIds.add(`var-${name}`);
+
+        // Update object groups that depend on this variable
+        this.updateAllObjectGroups();
+    }
+
+    /**
+     * Gets the value of a variable.
+     * @param name The name of the variable.
+     * @returns The value of the variable, or undefined if not found.
+     */
+    public getVariable(name: string): number | undefined {
+        return this.globalVariables.get(name);
+    }
+
+    /**
+     * Gets all variables as an object.
+     * @returns An object containing all variables and their values.
+     */
+    public getAllVariables(): Record<string, number> {
+        return Object.fromEntries(this.globalVariables);
+    }
+
+    /**
+     * Removes a variable.
+     * @param name The name of the variable to remove.
+     */
+    public freeVariable(name: string) {
+        if (!this.calculator) return;
+
+        this.stopVariableAnimation(name);
+        this.calculator.removeExpression({ id: `var-${name}` });
+        this.globalVariables.delete(name);
+        this.trackedIds.delete(`var-${name}`);
+    }
+
+    /**
+     * Clears all variables.
+     */
+    public clearVariables() {
+        if (!this.calculator) return;
+
+        this.variableAnimations.forEach((_, name) => {
+            this.stopVariableAnimation(name);
+        });
+
+        this.globalVariables.forEach((_, name) => {
+            this.calculator.removeExpression({ id: `var-${name}` });
+            this.trackedIds.delete(`var-${name}`);
+        });
+
+        this.globalVariables.clear();
+    }
+
+    /**
+     * Updates multiple variables at once.
+     * @param variables An object containing variable names and their values.
+     */
+    public setVariables(variables: Record<string, number>) {
+        Object.entries(variables).forEach(([name, value]) => {
+            this.setVariable(name, value);
+        });
+    }
+
+    /**
+     * Animates a variable from one value to another.
+     * @param name The name of the variable to animate.
+     * @param fromValue The starting value.
+     * @param toValue The ending value.
+     * @param duration Duration in milliseconds.
+     */
+    public animateVariable(name: string, fromValue: number, toValue: number, duration: number = 2000) {
+        if (!this.calculator || !name) return;
+
+        this.stopVariableAnimation(name);
+
+        this.setVariable(name, fromValue);
+        const startTime = performance.now();
+
+        const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const currentValue = fromValue + (toValue - fromValue) * progress;
+            this.setVariable(name, currentValue);
+
+            if (progress < 1) {
+                const frameId = requestAnimationFrame(animate);
+                this.variableAnimations.set(name, {
+                    startValue: fromValue,
+                    endValue: toValue,
+                    startTime,
+                    duration,
+                    frameId
+                });
+            } else {
+                this.variableAnimations.delete(name);
+            }
+        };
+
+        const frameId = requestAnimationFrame(animate);
+        this.variableAnimations.set(name, {
+            startValue: fromValue,
+            endValue: toValue,
+            startTime,
+            duration,
+            frameId
+        });
+    }
+
+    /**
+     * Stops animation of a specific variable.
+     * @param name The name of the variable.
+     */
+    public stopVariableAnimation(name: string) {
+        const animation = this.variableAnimations.get(name);
+        if (animation) {
+            cancelAnimationFrame(animation.frameId);
+            this.variableAnimations.delete(name);
+        }
+    }
+
+    /**
+     * Pauses animation of a specific variable.
+     * @param name The name of the variable.
+     */
+    public pauseVariableAnimation(name: string) {
+        this.stopVariableAnimation(name);
+    }
+
+    /**
+     * Stops all variable animations.
+     */
+    public stopAllVariableAnimations() {
+        this.variableAnimations.forEach((animation, name) => {
+            cancelAnimationFrame(animation.frameId);
+        });
+        this.variableAnimations.clear();
+    }
+
+    /**
+     * Plots a coordinate using an expression that can reference variables.
+     * @param id The unique identifier for this coordinate.
+     * @param coordExpr The LaTeX expression for the coordinate (e.g. "(h, h^2)").
+     * @param color Optional hex color string for the coordinate dot.
+     */
+    public plotCoordinateExpression(id: string, coordExpr: string, color?: string) {
+        if (!this.calculator || !coordExpr) return;
+        this.calculator.setExpression({
+            id: id,
+            latex: coordExpr,
+            showLabel: true,
+            color: color || '#10bbbb'
+        });
+        this.trackedIds.add(id);
+    }
+
+    /**
+     * Creates multiple objects at once - simple version that actually works
+     */
+    public createObjectGroup(groupId: string, template: string, countVar: string, prefix: string, maxCount: number = 50, color?: string) {
+        if (!this.calculator) return;
+
+        console.log("Creating object group:", groupId, template, countVar);
+
+        const count = Math.floor(this.globalVariables.get(countVar) || 0);
+        console.log("Initial count:", count);
+
+        // Create objects immediately
+        for (let i = 0; i < Math.min(count, maxCount); i++) {
+            const objId = `${prefix}${i}`;
+            const latex = template.replace(/\{i\}/g, i.toString());
+
+            console.log("Creating object:", objId);
+            console.log("Original template:", template);
+            console.log("Final LaTeX:", latex);
+            console.log("---");
+
+            this.calculator.setExpression({
+                id: objId,
+                latex: latex,
+                color: color || '#83C167'
+            });
+            this.trackedIds.add(objId);
+        }
+
+        // Store group info
+        this.objectGroups.set(groupId, {
+            prefix,
+            template,
+            countVar,
+            currentCount: count,
+            maxCount,
+            color
+        });
+    }
+
+    /**
+     * Expands template with index and variable substitutions
+     */
+    private expandTemplate(template: string, index: number): string {
+        if (!template) return '';
+
+        // Replace {i} with current index
+        let expanded = template.replace(/\{i\}/g, index.toString());
+
+        // Support common Riemann patterns
+        expanded = expanded.replace(/\{start\}/g, `${index}*2/n`);
+        expanded = expanded.replace(/\{end\}/g, `${index + 1}*2/n`);
+        expanded = expanded.replace(/\{height\}/g, `(${index}*2/n)^2`);
+
+        return expanded;
+    }
+
+    /**
+     * Updates objects in a group based on current variable values
+     */
+    private updateObjectGroup(groupId: string) {
+        const group = this.objectGroups.get(groupId);
+        if (!group || !this.calculator) return;
+
+        const targetCount = Math.min(
+            Math.max(0, Math.floor(this.globalVariables.get(group.countVar) || 0)),
+            group.maxCount
+        );
+
+        // Remove excess objects if count decreased
+        if (targetCount < group.currentCount) {
+            for (let i = targetCount; i < group.currentCount; i++) {
+                const objId = `${group.prefix}${i}`;
+                this.calculator.removeExpression({ id: objId });
+                this.trackedIds.delete(objId);
+            }
+        }
+
+        // Add new objects if count increased
+        if (targetCount > group.currentCount) {
+            for (let i = group.currentCount; i < targetCount; i++) {
+                const objId = `${group.prefix}${i}`;
+                const latex = this.expandTemplate(group.template, i);
+
+                this.calculator.setExpression({
+                    id: objId,
+                    latex: latex,
+                    color: group.color || '#83C167'
+                });
+                this.trackedIds.add(objId);
+            }
+        }
+
+        group.currentCount = targetCount;
+    }
+
+    /**
+     * Updates all object groups when variables change
+     */
+    private updateAllObjectGroups() {
+        this.objectGroups.forEach((_, groupId) => {
+            this.updateObjectGroup(groupId);
+        });
+    }
+
+    /**
+     * Removes an object group and all its generated objects
+     */
+    public freeObjectGroup(groupId: string) {
+        const group = this.objectGroups.get(groupId);
+        if (!group || !this.calculator) return;
+
+        // Remove all generated objects
+        for (let i = 0; i < group.currentCount; i++) {
+            const objId = `${group.prefix}${i}`;
+            this.calculator.removeExpression({ id: objId });
+            this.trackedIds.delete(objId);
+        }
+
+        this.objectGroups.delete(groupId);
+    }
+
+    /**
+     * Clears all object groups
+     */
+    public clearObjectGroups() {
+        this.objectGroups.forEach((_, groupId) => {
+            this.freeObjectGroup(groupId);
+        });
     }
 }

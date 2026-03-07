@@ -9,45 +9,37 @@ export async function GET(req: Request) {
     }
 
     const apiKey = process.env.ELEVENLAB_KEY;
-    if (!apiKey) {
-        console.error("ELEVENLAB_KEY is not set in environment variables");
-        return new NextResponse("TTS API key not configured", { status: 500 });
-    }
-
+    // Common default voice (e.g., George or Rachel)
     const voiceId = "uh5qBlKfjqFl7XXhFnJi";
 
     try {
-        // Use the non-streaming endpoint for better compatibility with HTML Audio
-        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
             method: "POST",
             headers: {
                 "Accept": "audio/mpeg",
                 "Content-Type": "application/json",
-                "xi-api-key": apiKey
+                "xi-api-key": apiKey || ""
             },
             body: JSON.stringify({
                 text,
-                model_id: "eleven_multilingual_v2",
+                model_id: "eleven_turbo_v2_5",
                 voice_settings: {
                     stability: 0.5,
-                    similarity_boost: 0.75
+                    similarity_boost: 0.5
                 }
             })
         });
 
         if (!response.ok) {
             const err = await response.text();
-            console.error("ElevenLabs error:", response.status, err);
-            return new NextResponse(`TTS generation failed: ${err}`, { status: response.status });
+            console.error("ElevenLabs error:", err);
+            return new NextResponse("TTS generation failed", { status: response.status });
         }
 
-        // Read the entire audio buffer and return it as a complete response
-        const audioBuffer = await response.arrayBuffer();
-
-        return new NextResponse(audioBuffer, {
+        return new NextResponse(response.body, {
             headers: {
                 "Content-Type": "audio/mpeg",
-                "Content-Length": audioBuffer.byteLength.toString(),
+                "Transfer-Encoding": "chunked",
                 "Cache-Control": "no-cache",
             }
         });

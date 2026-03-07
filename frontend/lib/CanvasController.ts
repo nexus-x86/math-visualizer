@@ -35,6 +35,7 @@ export class CanvasController {
         this.trackedIds.clear();
         this.messages = [];
         this.coordinates = {};
+        this.equations = {};
         this.draw();
     }
 
@@ -49,6 +50,7 @@ export class CanvasController {
         this.trackedIds.clear();
         this.messages = [];
         this.coordinates = {};
+        this.equations = {};
         this.draw();
     }
 
