@@ -14,3 +14,6 @@ docker-down:
 	docker compose down
 docker-run:
 	docker compose up --build -d
+
+docker-all:
+	docker compose down && docker compose up --build -d
