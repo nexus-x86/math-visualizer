@@ -14,6 +14,7 @@ export default function UnifiedHome() {
   const canvasControllerRef = useRef<CanvasController | null>(null);
 
   const [activeView, setActiveView] = useState<'desmos' | 'equations'>('desmos');
+  const [isRunning, setIsRunning] = useState(false);
   const parserRef = useRef<ScriptParser | null>(null);
 
   // Initialize Desmos
@@ -90,60 +91,41 @@ export default function UnifiedHome() {
     }
   }, [activeView]);
 
-  const [scriptText, setScriptText] = useState(
-    `resetViewport
+  const [scriptText, setScriptText] = useState("");
 
-say "Welcome to the Desp Engine. Let's start with a simple coordinate in Desmos."
-switchView "desmos"
-zoomToPoint 0 0 10
-plotCoordinate "dot" -4 -2 "#58C4DD"
-wait 1000
+  const handleCommandSubmit = async (prompt: string) => {
+    try {
+      const response = await fetch("/api/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: prompt })
+      });
+      const data = await response.json();
+      if (data.script) {
+        setScriptText(data.script);
+      }
+    } catch (e) {
+      console.error("Failed to fetch script:", e);
+      setScriptText(`// Error generating script\n// ${e}`);
+    }
+  };
 
-say "Now, we can animate it across the screen using a parametric slider."
-animateCoordinate "dot" "(c, c/2)" "c" -4 4 "#58C4DD" 3000
-wait 3500
+  const handleStopScript = () => {
+    if (parserRef.current) parserRef.current.stop();
+    if (desmosRef.current) desmosRef.current.cancelAllAnimations();
+    if (canvasControllerRef.current) canvasControllerRef.current.cancelAllAnimations();
+    setIsRunning(false);
+  };
 
-say "We can also draw sweeping boundaries using dotted lines."
-animateDottedEquation "bound" "x=a" "a" -5 5 "#FFFF00" 4000
-wait 4500
-
-say "And, of course, morphing equations physically on the graph."
-animateEquationMorph "sq" "y=1" "y=0.2x^2" "h" "#83C167" 3000
-wait 3500
-
-say "But the real magic happens when we switch over to the Equation Canvas."
-switchView "equations"
-wait 500
-
-say "Here, we render pure MathJax SVG shapes..."
-renderEquation "eq1" "f(x) = \\int_{0}^{2} x^3 \\, dx" "#FC6255"
-wait 2000
-
-say "And use a visual difference engine to seamlessly transform them."
-transformEquation "eq1" "f(x) = \\left[ \\frac{x^4}{4} \\right]_{0}^{2}" 2000 "#9A72AC"
-wait 2500
-
-say "It detects matching characters, interpolates their positions, fades out old ones, and fades in new ones."
-transformEquation "eq1" "f(x) = \\frac{2^4}{4} - \\frac{0^4}{4}" 2500 "#29ABCA"
-wait 3000
-
-say "Allowing for beautiful, Manim-style continuous derivations."
-transformEquation "eq1" "f(x) = \\frac{16}{4}" 1500 "#FF862F"
-wait 2000
-
-transformEquation "eq1" "f(x) = 4" 1000 "#83C167"
-wait 2000
-
-say "That concludes the engine demonstration!"`
-  );
-
-  const parseAndExecuteScript = () => {
+  const parseAndExecuteScript = async () => {
     if (!desmosRef.current || !canvasControllerRef.current) return;
 
     // 1. Immediately kill any currently running script engines or audio
     if (parserRef.current) {
       parserRef.current.stop();
     }
+
+    setIsRunning(true);
 
     // 2. Hardware reset both visuals instantly
     setActiveView('desmos');
@@ -158,24 +140,72 @@ say "That concludes the engine demonstration!"`
     );
 
     parserRef.current = parser;
-    parser.parseAndExecute(scriptText);
+    await parser.parseAndExecute(scriptText);
+
+    if (parserRef.current === parser && !parser.isStopped) {
+      setIsRunning(false);
+    }
   };
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', margin: 0, padding: 0, fontFamily: 'monospace', overflow: 'hidden', backgroundColor: '#000' }}>
 
       {/* Sidebar */}
-      <div style={{ width: '400px', zIndex: 10, display: 'flex', flexDirection: 'column', borderRight: '1px solid #333', padding: '10px', boxSizing: 'border-box', backgroundColor: '#1e1e1e' }}>
-        <h1 style={{ fontSize: '1.2rem', margin: '0 0 10px 0', color: '#fff' }}>Unified Engine</h1>
+      <div style={{
+        width: '400px',
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '16px',
+        boxSizing: 'border-box',
+        background: 'rgba(30, 30, 30, 0.8)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)'
+      }}>
+        <h1 style={{ fontSize: '1.2rem', margin: '0 0 16px 0', color: '#14b8a6', fontWeight: 'bold' }}>Unified Engine</h1>
         <textarea
           value={scriptText}
           onChange={(e) => setScriptText(e.target.value)}
           wrap="off"
-          style={{ flex: 1, width: '100%', resize: 'none', fontFamily: 'monospace', padding: '8px', boxSizing: 'border-box', marginBottom: '10px', border: '1px solid #444', backgroundColor: '#2d2d2d', color: '#fff', fontSize: '14px' }}
+          placeholder="Insert something to generate the script..."
+          style={{
+            flex: 1,
+            width: '100%',
+            resize: 'none',
+            fontFamily: 'monospace',
+            padding: '12px',
+            boxSizing: 'border-box',
+            marginBottom: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: '8px',
+            color: '#fff',
+            fontSize: '14px',
+            outline: 'none',
+            transition: 'border-color 0.3s ease'
+          }}
+          onFocus={(e) => e.target.style.borderColor = 'rgba(20, 184, 166, 0.5)'}
+          onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
           spellCheck={false}
         />
-        <button onClick={parseAndExecuteScript} style={{ padding: '12px', cursor: 'pointer', fontSize: '1rem', backgroundColor: '#14b8a6', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
-          Run Script
+        <button
+          onClick={isRunning ? handleStopScript : parseAndExecuteScript}
+          style={{
+            padding: '12px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            backgroundColor: isRunning ? '#ef4444' : '#14b8a6', // Red when running
+            color: isRunning ? 'white' : 'black',
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            transition: 'background-color 0.3s ease, opacity 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+        >
+          {isRunning ? "Stop Script" : "Run Script"}
         </button>
       </div>
 
@@ -211,7 +241,7 @@ say "That concludes the engine demonstration!"`
           }}
         />
 
-        <CommandPrompt />
+        <CommandPrompt onSubmit={handleCommandSubmit} />
 
       </div>
 

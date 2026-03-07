@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-export default function CommandPrompt() {
+interface CommandPromptProps {
+    onSubmit?: (text: string) => void;
+}
+
+export default function CommandPrompt({ onSubmit }: CommandPromptProps) {
     const [isFocused, setIsFocused] = useState(false);
     const [text, setText] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -17,7 +21,11 @@ export default function CommandPrompt() {
 
     const handleSend = () => {
         if (text.trim()) {
-            console.log("Submitted:", text);
+            if (onSubmit) {
+                onSubmit(text);
+            } else {
+                console.log("Submitted:", text);
+            }
             setText('');
         }
     };
