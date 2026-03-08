@@ -1,19 +1,25 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   rewrites: async () => {
-    // /api/query is handled by app/api/query/route.ts (with proper 290s timeout)
-    // All other /api/* paths (except /api/tts which is also a local route) still proxy to backend
-    return process.env.NODE_ENV === "development"
-      ? [
+    const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8000';
+    return {
+      // beforeFiles runs BEFORE Next.js filesystem routes — so /api/tts always
+      // goes to FastAPI regardless of whether a local route.ts file exists.
+      beforeFiles: [
         {
-          source: "/api/:path*",
-          destination: "http://127.0.0.1:8000/api/:path*",
-          // These local routes take precedence over the rewrite:
-          // - /api/query  → app/api/query/route.ts
-          // - /api/tts    → app/api/tts/route.ts
+          source: '/api/tts',
+          destination: `${backendUrl}/api/tts`,
         },
-      ]
-      : [];
+      ],
+      // afterFiles runs after filesystem routes — local /api/query/route.ts still
+      // takes precedence in both envs. Wildcard catches anything else in dev.
+      afterFiles: [
+        ...(process.env.NODE_ENV === 'development'
+          ? [{ source: '/api/:path*', destination: `${backendUrl}/api/:path*` }]
+          : []),
+      ],
+      fallback: [],
+    };
   },
 };
 
