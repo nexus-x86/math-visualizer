@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { DesmosController } from "../../lib/DesmosController";
 import { CanvasController } from "../../lib/CanvasController";
 import { ScriptParser } from "../../lib/ScriptParser";
+import { pauseCurrentAudio, resumeCurrentAudio } from "../../lib/AudioPlayer";
 import Sidebar from "../../components/Sidebar";
 import PromptBar from "../../components/PromptBar";
 
@@ -127,6 +128,7 @@ export default function AppPage() {
 
     const [activeView, setActiveView] = useState<"desmos" | "equations">("desmos");
     const [isRunning, setIsRunning] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
     const parserRef = useRef<ScriptParser | null>(null);
 
     const [scriptText, setScriptText] = useState("");
@@ -247,6 +249,19 @@ export default function AppPage() {
         if (canvasControllerRef.current) canvasControllerRef.current.cancelAllAnimations();
         setSubtitle("");
         setIsRunning(false);
+        setIsPaused(false);
+    };
+
+    const handlePauseScript = async () => {
+        if (parserRef.current) parserRef.current.pause();
+        await pauseCurrentAudio();
+        setIsPaused(true);
+    };
+
+    const handleResumeScript = async () => {
+        if (parserRef.current) parserRef.current.resume();
+        await resumeCurrentAudio();
+        setIsPaused(false);
     };
 
     const parseAndExecuteScript = async (overrideScript?: string) => {
@@ -275,6 +290,7 @@ export default function AppPage() {
 
         if (parserRef.current === parser && !parser.isStopped) {
             setIsRunning(false);
+            setIsPaused(false);
         }
     };
 
@@ -323,8 +339,11 @@ export default function AppPage() {
                     onSettingsChange={handleSettingsChange}
                     scriptText={scriptText}
                     isRunning={isRunning}
+                    isPaused={isPaused}
                     onPlay={() => parseAndExecuteScript()}
                     onStop={handleStopScript}
+                    onPause={handlePauseScript}
+                    onResume={handleResumeScript}
                     onSave={handleSaveScript}
                     onLoad={handleLoadScript}
                 />

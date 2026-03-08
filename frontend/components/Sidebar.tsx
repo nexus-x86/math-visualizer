@@ -10,13 +10,16 @@ interface SidebarProps {
     onSettingsChange: (key: string, value: any) => void;
     scriptText?: string;
     isRunning?: boolean;
+    isPaused?: boolean;
     onPlay?: () => void;
     onStop?: () => void;
+    onPause?: () => void;
+    onResume?: () => void;
     onLoad?: (script: string) => void;
     onSave?: () => void;
 }
 
-export default function Sidebar({ settings, onSettingsChange, scriptText, isRunning, onPlay, onStop, onLoad, onSave }: SidebarProps) {
+export default function Sidebar({ settings, onSettingsChange, scriptText, isRunning, isPaused, onPlay, onStop, onPause, onResume, onLoad, onSave }: SidebarProps) {
     const [activeTab, setActiveTab] = useState<"settings" | "script">("settings");
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -70,7 +73,7 @@ export default function Sidebar({ settings, onSettingsChange, scriptText, isRunn
                     MATHVIZ
                 </Link>
 
-                {/* State-aware Run/Stop button */}
+                {/* State-aware Run/Stop/Pause/Resume buttons */}
                 {scriptText && !isRunning ? (
                     <button
                         onClick={onPlay}
@@ -116,27 +119,88 @@ export default function Sidebar({ settings, onSettingsChange, scriptText, isRunn
                         </svg>
                         Run
                     </button>
+                ) : isPaused ? (
+                    /* Paused state: show Resume + Stop */
+                    <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                            onClick={onResume}
+                            style={{
+                                display: "flex", alignItems: "center", gap: "6px",
+                                padding: "6px 10px",
+                                borderRadius: "8px", border: "1px solid rgba(52, 211, 153, 0.5)",
+                                background: "rgba(52, 211, 153, 0.12)", color: "#34d399",
+                                cursor: "pointer", fontFamily: "inherit",
+                                fontSize: "0.75rem", fontWeight: 700, letterSpacing: "2px",
+                                textTransform: "uppercase", transition: "all 0.2s ease",
+                                animation: "resumeGlow 1.8s ease-in-out infinite",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(52, 211, 153, 0.22)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(52, 211, 153, 0.12)"; }}
+                        >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3" />
+                            </svg>
+                            Resume
+                        </button>
+                        <button
+                            onClick={onStop}
+                            style={{
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                width: "30px", height: "30px",
+                                borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.35)",
+                                background: "rgba(239, 68, 68, 0.10)", color: "#ef4444",
+                                cursor: "pointer", transition: "all 0.2s ease",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.22)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.10)"; }}
+                            title="Stop"
+                        >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="4" y="4" width="16" height="16" rx="2" />
+                            </svg>
+                        </button>
+                    </div>
                 ) : isRunning ? (
-                    <button
-                        onClick={onStop}
-                        style={{
-                            display: "flex", alignItems: "center", gap: "6px",
-                            padding: "6px 14px",
-                            borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.35)",
-                            background: "rgba(239, 68, 68, 0.12)", color: "#ef4444",
-                            cursor: "pointer", fontFamily: "inherit",
-                            fontSize: "0.75rem", fontWeight: 700, letterSpacing: "2px",
-                            textTransform: "uppercase", transition: "all 0.2s ease",
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.22)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.12)"; }}
-                    >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="6" y="4" width="4" height="16" rx="1" />
-                            <rect x="14" y="4" width="4" height="16" rx="1" />
-                        </svg>
-                        Stop
-                    </button>
+                    /* Running state: show Pause + Stop */
+                    <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                            onClick={onPause}
+                            style={{
+                                display: "flex", alignItems: "center", gap: "6px",
+                                padding: "6px 10px",
+                                borderRadius: "8px", border: "1px solid rgba(251, 191, 36, 0.45)",
+                                background: "rgba(251, 191, 36, 0.10)", color: "#fbbf24",
+                                cursor: "pointer", fontFamily: "inherit",
+                                fontSize: "0.75rem", fontWeight: 700, letterSpacing: "2px",
+                                textTransform: "uppercase", transition: "all 0.2s ease",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(251, 191, 36, 0.20)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(251, 191, 36, 0.10)"; }}
+                        >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="4" width="4" height="16" rx="1" />
+                                <rect x="14" y="4" width="4" height="16" rx="1" />
+                            </svg>
+                            Pause
+                        </button>
+                        <button
+                            onClick={onStop}
+                            style={{
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                width: "30px", height: "30px",
+                                borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.35)",
+                                background: "rgba(239, 68, 68, 0.10)", color: "#ef4444",
+                                cursor: "pointer", transition: "all 0.2s ease",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.22)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.10)"; }}
+                            title="Stop"
+                        >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="4" y="4" width="16" height="16" rx="2" />
+                            </svg>
+                        </button>
+                    </div>
                 ) : (
                     <div style={{ width: "60px" }} />
                 )}
@@ -339,6 +403,10 @@ export default function Sidebar({ settings, onSettingsChange, scriptText, isRunn
                 @keyframes readyGlow {
                     0%, 100% { box-shadow: 0 0 16px rgba(51, 165, 196, 0.2); }
                     50%       { box-shadow: 0 0 32px rgba(51, 165, 196, 0.5); }
+                }
+                @keyframes resumeGlow {
+                    0%, 100% { box-shadow: 0 0 12px rgba(52, 211, 153, 0.15); }
+                    50%       { box-shadow: 0 0 24px rgba(52, 211, 153, 0.45); }
                 }
                 @keyframes shimmer {
                     0%   { left: -100%; }

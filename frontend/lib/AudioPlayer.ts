@@ -11,6 +11,11 @@ let unlocked = false;
 let activeSource: AudioBufferSourceNode | null = null;
 let activeStopFn: (() => void) | null = null;
 
+// ── Pause state ────────────────────────────────────────────────────────────────
+let _paused = false;
+// Listeners notified when pause state flips so pauseableSleep can unblock.
+const _pauseListeners = new Set<() => void>();
+
 function getContext(): AudioContext {
     if (!ctx) {
         ctx = new AudioContext();
@@ -92,4 +97,77 @@ export function stopCurrentAudio() {
         activeStopFn = null;
         fn();
     }
+}
+
+/**
+ * Pauses audio playback by suspending the AudioContext.
+ * The script loop must independently check isPaused() to stall between commands.
+ */
+export async function pauseCurrentAudio() {
+    if (_paused) return;
+    _paused = true;
+    const context = getContext();
+    if (context.state === 'running') {
+        try { await context.suspend(); } catch (_) { }
+    }
+    _pauseListeners.forEach(fn => fn());
+}
+
+/**
+ * Resumes audio playback by resuming the AudioContext.
+ */
+export async function resumeCurrentAudio() {
+    if (!_paused) return;
+    _paused = false;
+    const context = getContext();
+    if (context.state === 'suspended') {
+        try { await context.resume(); } catch (_) { }
+    }
+    _pauseListeners.forEach(fn => fn());
+}
+
+/** Returns whether audio is currently paused. */
+export function isAudioPaused() {
+    return _paused;
+}
+
+/**
+ * A sleep that automatically freezes while audio is paused, then resumes after the
+ * remaining time once unpaused. Use this instead of plain setTimeout in the script loop.
+ */
+export function pauseableSleep(ms: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+        let remaining = ms;
+        let startedAt = Date.now();
+        let timer: ReturnType<typeof setTimeout> | null = null;
+
+        const onPauseChange = () => {
+            if (_paused) {
+                // Pause: cancel timer, record remaining time
+                if (timer !== null) {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+                remaining -= Date.now() - startedAt;
+            } else {
+                // Resume: restart timer with remaining time
+                startedAt = Date.now();
+                timer = setTimeout(() => {
+                    _pauseListeners.delete(onPauseChange);
+                    resolve();
+                }, Math.max(0, remaining));
+            }
+        };
+
+        _pauseListeners.add(onPauseChange);
+
+        if (!_paused) {
+            // Start immediately
+            timer = setTimeout(() => {
+                _pauseListeners.delete(onPauseChange);
+                resolve();
+            }, ms);
+        }
+        // If already paused, just wait for resume event
+    });
 }

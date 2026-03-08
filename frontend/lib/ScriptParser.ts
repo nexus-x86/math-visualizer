@@ -1,5 +1,5 @@
 import { DesmosController } from "./DesmosController";
-import { playTTS, stopCurrentAudio } from "./AudioPlayer";
+import { playTTS, stopCurrentAudio, pauseableSleep, isAudioPaused } from "./AudioPlayer";
 
 // A function type that takes an array of string arguments
 export type CommandCallback = (args: string[]) => void;
@@ -8,6 +8,7 @@ export class ScriptParser {
     // The dictionary mapping command names to functions
     private commands: Map<string, CommandCallback> = new Map();
     public isStopped = false;
+    public isPaused = false;
 
     /**
      * Registers a new command in the parser's dictionary.
@@ -30,7 +31,18 @@ export class ScriptParser {
      */
     public stop() {
         this.isStopped = true;
+        this.isPaused = false;
         stopCurrentAudio();
+    }
+
+    /** Pauses execution after the current command finishes. Audio is paused separately via AudioPlayer. */
+    public pause() {
+        this.isPaused = true;
+    }
+
+    /** Resumes execution from where it paused. */
+    public resume() {
+        this.isPaused = false;
     }
 
     /**
@@ -43,12 +55,23 @@ export class ScriptParser {
     /**
      * Parses and executes a block of text line-by-line.
      */
+    /** Wait until unpaused (polls every 50ms). */
+    private async waitUntilResumed() {
+        while (this.isPaused && !this.isStopped) {
+            await new Promise(r => setTimeout(r, 50));
+        }
+    }
+
     public async parseAndExecute(scriptText: string) {
         this.isStopped = false;
+        this.isPaused = false;
         const lines = scriptText.split('\n');
 
         for (const line of lines) {
+            // Stall here if paused
+            await this.waitUntilResumed();
             if (this.isStopped) break;
+
             const trimmed = line.trim();
             if (!trimmed || trimmed.startsWith('//')) continue; // Skip empty lines and comments
 
@@ -92,13 +115,9 @@ export class ScriptParser {
 
         parser.registerCommand('wait', async (args) => {
             let ms = parseFloat(args[0] as string);
-
-            if (ms > 3000) {
-                ms = 3000;
-            }
-
+            if (ms > 3000) ms = 3000;
             if (!isNaN(ms)) {
-                await new Promise(resolve => setTimeout(resolve, ms));
+                await pauseableSleep(ms);
             }
         });
 
@@ -305,7 +324,7 @@ export class ScriptParser {
         parser.registerCommand('wait', async (args) => {
             const ms = parseFloat(args[0] as string);
             if (!isNaN(ms)) {
-                await new Promise(resolve => setTimeout(resolve, ms));
+                await pauseableSleep(ms);
             }
         });
 

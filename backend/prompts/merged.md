@@ -54,15 +54,15 @@ Arguments with spaces or special mathematical characters **must** be wrapped in 
 
 **IMPORTANT: Desmos is in INVERTED COLOR MODE (dark background).**
 
-When picking colors for your commands (like graphs and equations), you MUST use hex codes corresponding to standard Manim/3B1B color themes **optimized for dark backgrounds**:
+When picking colors for your commands (like graphs and equations), you MUST use hex codes corresponding to standard Manim/3B1B color themes **optimized for dark backgrounds and inverted colors**:
 
-Blue: `"#58C4DD"` (appears as bright cyan-blue on dark background)
-Yellow: `"#FFFF00"` (appears as bright yellow on dark background)
-Green: `"#83C167"` (appears as bright green on dark background)
-Red: `"#FC6255"` (appears as bright coral-red on dark background)
-Purple: `"#9A72AC"` (appears as bright purple on dark background)
-Teal: `"#29ABCA"` (appears as bright teal on dark background)
-Orange: `"#FF862F"` (appears as bright orange on dark background)
+Blue → #A73B22
+Yellow → #0000FF
+Green → #7C3E98
+Red → #039DAA
+Purple → #658D53
+Teal → #D65435
+Orange → #0079D0
 
 **These colors are designed for dark mode and will appear vibrant and visible against the black background.**
 
