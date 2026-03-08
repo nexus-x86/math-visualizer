@@ -293,10 +293,14 @@ export class ScriptParser {
      */
     public static createUnifiedParser(
         desmos: DesmosController,
-        canvas: any, // Use any to avoid circular strict type injection for now
-        setView: (view: string) => void
+        canvas: any,
+        setView: (view: string) => void,
+        options?: {
+            onSubtitle?: (text: string) => void;
+        }
     ): ScriptParser {
         const parser = new ScriptParser();
+        const onSubtitle = options?.onSubtitle ?? (() => { });
 
         parser.registerCommand('wait', async (args) => {
             const ms = parseFloat(args[0] as string);
@@ -436,11 +440,14 @@ export class ScriptParser {
             if (args.length > 0) {
                 const text = args[0] as string;
                 console.log("Narrator says:", text);
+                onSubtitle(text);
                 try {
                     const audioUrl = `/api/tts?text=${encodeURIComponent(text)}`;
                     await playTTS(audioUrl);
                 } catch (e) {
                     console.error("Say command error:", e);
+                } finally {
+                    onSubtitle("");
                 }
             }
         });

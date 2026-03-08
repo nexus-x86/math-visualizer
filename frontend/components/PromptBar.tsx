@@ -5,15 +5,14 @@ import { useState, useRef, useEffect } from "react";
 interface PromptBarProps {
     onSubmit: (text: string, mode: string) => void;
     isGenerating?: boolean;
+    isRunning?: boolean;
     loaded?: boolean;
 }
 
-
-export default function PromptBar({ onSubmit, isGenerating, loaded = false }: PromptBarProps) {
+export default function PromptBar({ onSubmit, isGenerating, isRunning = false, loaded = false }: PromptBarProps) {
     const [text, setText] = useState("");
     const [activeMode, _setActiveMode] = useState("animation");
     const [isFocused, setIsFocused] = useState(false);
-    const [_detectedTopic, setDetectedTopic] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Auto-resize textarea
@@ -25,21 +24,7 @@ export default function PromptBar({ onSubmit, isGenerating, loaded = false }: Pr
         }
     }, [text]);
 
-    // Simple topic detection
-    useEffect(() => {
-        const lower = text.toLowerCase();
-        if (lower.includes("vector") || lower.includes("linear algebra") || lower.includes("matrix")) {
-            setDetectedTopic("Linear Algebra");
-        } else if (lower.includes("calculus") || lower.includes("integral") || lower.includes("derivative")) {
-            setDetectedTopic("Calculus");
-        } else if (lower.includes("probability") || lower.includes("statistics")) {
-            setDetectedTopic("Probability");
-        } else if (lower.includes("geometry") || lower.includes("triangle") || lower.includes("circle")) {
-            setDetectedTopic("Geometry");
-        } else {
-            setDetectedTopic("");
-        }
-    }, [text]);
+
 
     const handleSend = () => {
         if (text.trim() && !isGenerating) {
@@ -54,15 +39,18 @@ export default function PromptBar({ onSubmit, isGenerating, loaded = false }: Pr
                 position: "absolute",
                 top: "24px",
                 left: "50%",
-                transform: loaded ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(-20px)",
+                transform: loaded && !isRunning
+                    ? "translateX(-50%) translateY(0)"
+                    : "translateX(-50%) translateY(-20px)",
                 width: "70%",
                 maxWidth: "700px",
                 zIndex: 20,
                 display: "flex",
                 flexDirection: "column",
                 gap: "12px",
-                opacity: loaded ? 1 : 0,
-                transition: "opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s",
+                opacity: loaded && !isRunning ? 1 : 0,
+                pointerEvents: isRunning ? "none" : "auto",
+                transition: "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
         >
             {/* Main input */}
@@ -87,7 +75,7 @@ export default function PromptBar({ onSubmit, isGenerating, loaded = false }: Pr
                     ref={textareaRef}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="Describe what graphics you'd like to see"
+                    placeholder="e.g. Explain what is a Riemann sum"
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     onKeyDown={(e) => {

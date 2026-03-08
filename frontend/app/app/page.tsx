@@ -132,13 +132,13 @@ export default function AppPage() {
     const [scriptText, setScriptText] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
     const [loaded, setLoaded] = useState(false);
+    const [subtitle, setSubtitle] = useState("");
 
     useEffect(() => {
         setLoaded(true);
     }, []);
 
     const [settings, setSettings] = useState({
-        narration: true,
         conceptLevel: 1,
     });
 
@@ -245,6 +245,7 @@ export default function AppPage() {
         if (parserRef.current) parserRef.current.stop();
         if (desmosRef.current) desmosRef.current.cancelAllAnimations();
         if (canvasControllerRef.current) canvasControllerRef.current.cancelAllAnimations();
+        setSubtitle("");
         setIsRunning(false);
     };
 
@@ -263,7 +264,10 @@ export default function AppPage() {
         const parser = ScriptParser.createUnifiedParser(
             desmosRef.current,
             canvasControllerRef.current,
-            (viewName) => setActiveView(viewName as "desmos" | "equations")
+            (viewName) => setActiveView(viewName as "desmos" | "equations"),
+            {
+                onSubtitle: (text) => setSubtitle(text),
+            }
         );
 
         parserRef.current = parser;
@@ -276,6 +280,21 @@ export default function AppPage() {
 
     const handleSettingsChange = (key: string, value: any) => {
         setSettings((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const handleSaveScript = () => {
+        if (!scriptText) return;
+        const blob = new Blob([scriptText], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "script.desp";
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleLoadScript = (script: string) => {
+        setScriptText(script);
     };
 
     return (
@@ -306,6 +325,8 @@ export default function AppPage() {
                     isRunning={isRunning}
                     onPlay={() => parseAndExecuteScript()}
                     onStop={handleStopScript}
+                    onSave={handleSaveScript}
+                    onLoad={handleLoadScript}
                 />
             </div>
 
@@ -353,7 +374,43 @@ export default function AppPage() {
                 />
 
                 {/* Prompt Bar */}
-                <PromptBar onSubmit={handleCommandSubmit} isGenerating={isGenerating} loaded={loaded} />
+                <PromptBar onSubmit={handleCommandSubmit} isGenerating={isGenerating} isRunning={isRunning} loaded={loaded} />
+
+                {/* Subtitle overlay */}
+                {subtitle && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: "48px",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            maxWidth: "75%",
+                            zIndex: 30,
+                            textAlign: "center",
+                            animation: "subtitleIn 0.3s ease",
+                        }}
+                    >
+                        <span
+                            style={{
+                                display: "inline-block",
+                                background: "rgba(6, 6, 10, 0.82)",
+                                backdropFilter: "blur(12px)",
+                                WebkitBackdropFilter: "blur(12px)",
+                                color: "#f1f5f9",
+                                fontSize: "1rem",
+                                fontWeight: 500,
+                                lineHeight: 1.5,
+                                padding: "10px 20px",
+                                borderRadius: "10px",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                                boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+                                letterSpacing: "0.2px",
+                            }}
+                        >
+                            {subtitle}
+                        </span>
+                    </div>
+                )}
 
                 {/* Loading overlay */}
                 {isGenerating && (
@@ -375,6 +432,7 @@ export default function AppPage() {
                             animation: "fadeIn 0.3s ease",
                         }}
                     >
+
                         <div
                             style={{
                                 display: "flex",
@@ -420,6 +478,10 @@ export default function AppPage() {
         @keyframes pulse {
           0%, 100% { opacity: 0.45; }
           50% { opacity: 0.9; }
+        }
+        @keyframes subtitleIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
       `}</style>
         </div>

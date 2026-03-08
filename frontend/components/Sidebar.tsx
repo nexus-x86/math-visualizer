@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 
 interface SidebarProps {
     settings: {
-        narration: boolean;
         conceptLevel: number;
     };
     onSettingsChange: (key: string, value: any) => void;
@@ -13,10 +12,31 @@ interface SidebarProps {
     isRunning?: boolean;
     onPlay?: () => void;
     onStop?: () => void;
+    onLoad?: (script: string) => void;
+    onSave?: () => void;
 }
 
-export default function Sidebar({ settings, onSettingsChange, scriptText, isRunning, onPlay, onStop }: SidebarProps) {
+export default function Sidebar({ settings, onSettingsChange, scriptText, isRunning, onPlay, onStop, onLoad, onSave }: SidebarProps) {
     const [activeTab, setActiveTab] = useState<"settings" | "script">("settings");
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleLoadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const text = ev.target?.result as string;
+            if (text && onLoad) onLoad(text);
+        };
+        reader.readAsText(file);
+        // Reset so same file can be loaded again
+        e.target.value = "";
+    };
+
 
     const conceptLabels = ["High School", "Early Undergrad", "Late Undergrad"];
 
@@ -34,22 +54,93 @@ export default function Sidebar({ settings, onSettingsChange, scriptText, isRunn
                 flexShrink: 0,
             }}
         >
-            {/* Logo */}
-            <Link
-                href="/"
-                style={{
-                    padding: "20px 24px 0",
-                    fontSize: "0.8rem",
-                    fontWeight: 700,
-                    letterSpacing: "3px",
-                    color: "#e2e8f0",
-                    textTransform: "uppercase",
-                    textDecoration: "none",
-                    display: "block",
-                }}
-            >
-                MATHVIZ
-            </Link>
+            {/* Logo + Run button row */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 0 24px" }}>
+                <Link
+                    href="/"
+                    style={{
+                        fontSize: "0.8rem",
+                        fontWeight: 700,
+                        letterSpacing: "3px",
+                        color: "#e2e8f0",
+                        textTransform: "uppercase",
+                        textDecoration: "none",
+                    }}
+                >
+                    MATHVIZ
+                </Link>
+
+                {/* State-aware Run/Stop button */}
+                {scriptText && !isRunning ? (
+                    <button
+                        onClick={onPlay}
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "6px 14px",
+                            borderRadius: "8px",
+                            border: "1px solid rgba(51, 165, 196, 0.5)",
+                            background: "linear-gradient(135deg, rgba(51, 165, 196, 0.18), rgba(14, 165, 233, 0.1))",
+                            color: "#33a5c4",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            letterSpacing: "2px",
+                            textTransform: "uppercase",
+                            animation: "readyGlow 2.4s ease-in-out infinite",
+                            position: "relative",
+                            overflow: "hidden",
+                            transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(51, 165, 196, 0.32), rgba(14, 165, 233, 0.22))";
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(51, 165, 196, 0.18), rgba(14, 165, 233, 0.1))";
+                            e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                    >
+                        {/* Shimmer sweep */}
+                        <div style={{
+                            position: "absolute",
+                            top: 0, left: "-100%", width: "60%", height: "100%",
+                            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
+                            animation: "shimmer 2.4s ease-in-out infinite",
+                            pointerEvents: "none",
+                        }} />
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        Run
+                    </button>
+                ) : isRunning ? (
+                    <button
+                        onClick={onStop}
+                        style={{
+                            display: "flex", alignItems: "center", gap: "6px",
+                            padding: "6px 14px",
+                            borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.35)",
+                            background: "rgba(239, 68, 68, 0.12)", color: "#ef4444",
+                            cursor: "pointer", fontFamily: "inherit",
+                            fontSize: "0.75rem", fontWeight: 700, letterSpacing: "2px",
+                            textTransform: "uppercase", transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.22)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.12)"; }}
+                    >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16" rx="1" />
+                            <rect x="14" y="4" width="4" height="16" rx="1" />
+                        </svg>
+                        Stop
+                    </button>
+                ) : (
+                    <div style={{ width: "60px" }} />
+                )}
+            </div>
 
             {/* Tabs */}
             <div
@@ -89,22 +180,17 @@ export default function Sidebar({ settings, onSettingsChange, scriptText, isRunn
             <div
                 style={{
                     flex: 1,
-                    overflowY: "auto",
-                    padding: "20px 24px",
+                    overflowY: activeTab === "script" ? "hidden" : "auto",
+                    padding: activeTab === "script" ? "0" : "20px 24px",
                     display: "flex",
                     flexDirection: "column",
                     gap: "18px",
+                    minHeight: 0,
                 }}
+                className="sidebar-scroll"
             >
                 {activeTab === "settings" ? (
                     <>
-                        {/* Toggle: Narration */}
-                        <ToggleRow
-                            label="Narration"
-                            value={settings.narration}
-                            onChange={(v) => onSettingsChange("narration", v)}
-                        />
-
                         {/* Concept Level */}
                         <div>
                             <div
@@ -155,92 +241,133 @@ export default function Sidebar({ settings, onSettingsChange, scriptText, isRunn
 
                         {/* Action buttons */}
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
-                            <ActionButton label="Load" variant="load" />
-                            <ActionButton label="Export" variant="primary" />
+                            {/* Hidden file input for .derp loading */}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".derp"
+                                style={{ display: "none" }}
+                                onChange={handleFileChange}
+                            />
+                            <ActionButton label="Load" variant="load" onClick={handleLoadClick} />
+                            <ActionButton label="Export" variant="primary" onClick={onSave} />
                         </div>
                     </>
                 ) : activeTab === "script" ? (
                     scriptText ? (
-                        <pre
-                            style={{
-                                margin: 0,
-                                padding: "12px",
-                                background: "rgba(255,255,255,0.03)",
-                                border: "1px solid rgba(255,255,255,0.07)",
-                                borderRadius: "8px",
-                                color: "rgba(255,255,255,0.7)",
-                                fontSize: "0.72rem",
-                                fontFamily: "'Geist Mono', 'Fira Code', monospace",
-                                lineHeight: 1.65,
-                                whiteSpace: "pre-wrap",
-                                wordBreak: "break-word",
-                                overflowX: "hidden",
-                            }}
-                        >
-                            {scriptText}
-                        </pre>
+                        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                            <div
+                                style={{
+                                    flex: 1,
+                                    overflowY: "auto",
+                                    minHeight: 0,
+                                    padding: "16px 0",
+                                    fontFamily: "'Geist Mono', 'Fira Code', 'Courier New', monospace",
+                                    fontSize: "0.7rem",
+                                    lineHeight: 1.7,
+                                }}
+                                className="sidebar-scroll"
+                            >
+                                {scriptText.split("\n").map((line, i) => {
+                                    // Simple keyword highlighting
+                                    const isComment = line.trim().startsWith("//");
+                                    const keyword = line.trim().split(" ")[0];
+                                    const isCmd = !isComment && keyword.length > 0;
+                                    return (
+                                        <div
+                                            key={i}
+                                            style={{
+                                                display: "flex",
+                                                paddingRight: "16px",
+                                                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
+                                            }}
+                                        >
+                                            {/* Line number */}
+                                            <span style={{
+                                                minWidth: "32px",
+                                                textAlign: "right",
+                                                paddingRight: "12px",
+                                                paddingLeft: "12px",
+                                                color: "rgba(255,255,255,0.15)",
+                                                userSelect: "none",
+                                                flexShrink: 0,
+                                            }}>{i + 1}</span>
+                                            {/* Code */}
+                                            <span style={{
+                                                color: isComment
+                                                    ? "rgba(255,255,255,0.25)"
+                                                    : "rgba(255,255,255,0.75)",
+                                                fontStyle: isComment ? "italic" : "normal",
+                                                wordBreak: "break-all",
+                                            }}>
+                                                {isCmd && !isComment ? (
+                                                    <>
+                                                        <span style={{ color: "#33a5c4", fontWeight: 600 }}>{keyword}</span>
+                                                        {line.slice(keyword.length)}
+                                                    </>
+                                                ) : line}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     ) : (
                         <div
                             style={{
-                                color: "rgba(255,255,255,0.3)",
-                                fontSize: "0.8rem",
-                                textAlign: "center",
-                                paddingTop: "40px",
-                                fontStyle: "italic",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                height: "100%",
+                                gap: "12px",
+                                paddingTop: "60px",
+                                color: "rgba(255,255,255,0.2)",
                             }}
                         >
-                            No script yet
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                <polyline points="16 18 22 12 16 6" />
+                                <polyline points="8 6 2 12 8 18" />
+                            </svg>
+                            <span style={{ fontSize: "0.78rem", fontStyle: "italic" }}>No script yet</span>
                         </div>
                     )
                 ) : null}
             </div>
 
-            {/* Play/Stop button — bottom right */}
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    padding: "12px 16px",
-                    borderTop: "1px solid rgba(255,255,255,0.06)",
-                }}
-            >
-                <button
-                    onClick={isRunning ? onStop : onPlay}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "8px",
-                        border: "none",
-                        background: isRunning ? "rgba(239, 68, 68, 0.15)" : "rgba(51, 165, 196, 0.15)",
-                        color: isRunning ? "#ef4444" : "#33a5c4",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = isRunning ? "rgba(239, 68, 68, 0.28)" : "rgba(51, 165, 196, 0.28)";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = isRunning ? "rgba(239, 68, 68, 0.15)" : "rgba(51, 165, 196, 0.15)";
-                    }}
-                >
-                    {isRunning ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="6" y="4" width="4" height="16" rx="1" />
-                            <rect x="14" y="4" width="4" height="16" rx="1" />
-                        </svg>
-                    ) : (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
-                    )}
-                </button>
-            </div>
+            <style>{`
+                @keyframes readyGlow {
+                    0%, 100% { box-shadow: 0 0 16px rgba(51, 165, 196, 0.2); }
+                    50%       { box-shadow: 0 0 32px rgba(51, 165, 196, 0.5); }
+                }
+                @keyframes shimmer {
+                    0%   { left: -100%; }
+                    60%  { left: 160%; }
+                    100% { left: 160%; }
+                }
+                .sidebar-scroll::-webkit-scrollbar {
+                    width: 3px;
+                }
+                .sidebar-scroll::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .sidebar-scroll::-webkit-scrollbar-thumb {
+                    background: rgba(51, 165, 196, 0.25);
+                    border-radius: 99px;
+                }
+                .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+                    background: rgba(51, 165, 196, 0.55);
+                }
+                .sidebar-scroll {
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(51, 165, 196, 0.25) transparent;
+                }
+            `}</style>
         </div>
     );
 }
+
+
 
 // -- Sub-components --
 
@@ -316,7 +443,7 @@ function SelectInput({ value, options, onChange }: { value: string; options: str
     );
 }
 
-function ActionButton({ label, variant }: { label: string; variant: "primary" | "secondary" | "load" }) {
+function ActionButton({ label, variant, onClick }: { label: string; variant: "primary" | "secondary" | "load"; onClick?: () => void }) {
     const styles = {
         primary: {
             border: "none",
@@ -344,6 +471,7 @@ function ActionButton({ label, variant }: { label: string; variant: "primary" | 
     const isPrimary = variant === "primary";
     return (
         <button
+            onClick={onClick}
             style={{
                 padding: "10px",
                 fontSize: "0.8rem",
