@@ -62,15 +62,12 @@ export default function Sidebar({ settings, onSettingsChange, scriptText, isRunn
                 <Link
                     href="/"
                     style={{
-                        fontSize: "0.8rem",
-                        fontWeight: 700,
-                        letterSpacing: "3px",
-                        color: "#e2e8f0",
-                        textTransform: "uppercase",
+                        display: "flex", alignItems: "center", gap: "8px",
                         textDecoration: "none",
                     }}
                 >
-                    MATHVIZ
+                    <img src="/logo.webp" alt="Mathphic" style={{ height: "22px", width: "auto" }} />
+                    <span style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "3px", color: "#e2e8f0", textTransform: "uppercase" }}>MATHPHIC</span>
                 </Link>
 
                 {/* State-aware Run/Stop/Pause/Resume buttons */}

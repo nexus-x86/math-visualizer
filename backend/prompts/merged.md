@@ -56,15 +56,27 @@ Arguments with spaces or special mathematical characters **must** be wrapped in 
 
 When picking colors for your commands (like graphs and equations), you MUST use hex codes corresponding to standard Manim/3B1B color themes **optimized for dark backgrounds and inverted colors**:
 
-Blue → #A73B22
-Yellow → #0000FF
-Green → #7C3E98
-Red → #039DAA
-Purple → #658D53
-Teal → #D65435
-Orange → #0079D0
+| Visible color (what user sees) | Hex code to use in commands |
+|---|---|
+| Blue   | #A73B22 |
+| Yellow | #0000FF |
+| Green  | #7C3E98 |
+| Red    | #039DAA |
+| Purple | #658D53 |
+| Teal   | #D65435 |
+| Orange | #0079D0 |
 
-**These colors are designed for dark mode and will appear vibrant and visible against the black background.**
+**These hex codes are pre-inverted. Desmos will display them as the visible color in the left column.**
+
+**🚨 CRITICAL — NARRATION COLOR RULE:**
+When referring to colors inside `say` commands, ALWAYS use the **visible color name** from the left column above — NOT the name of the raw hex code.
+
+For example:
+- If you plot with `#A73B22`, say "the **blue** curve" — NOT "the red curve"
+- If you plot with `#039DAA`, say "the **red** curve" — NOT "the teal curve"
+- If you plot with `#0000FF`, say "the **yellow** curve" — NOT "the blue curve"
+
+The narration must match what the user actually sees on screen after dark mode inversion.
 
 ---
 

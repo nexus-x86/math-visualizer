@@ -16,8 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Desmos Graph",
-  description: "Desmos Webpage",
+  title: "Mathphic",
+  description: "Mathphic - Visual Math Learning",
+  icons: {
+    icon: "/logo.webp",
+  },
 };
 
 export default function RootLayout({
