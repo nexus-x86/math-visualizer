@@ -318,7 +318,7 @@ export default function Sidebar({ settings, onSettingsChange, scriptText, isRunn
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept=".derp"
+                                accept=".desp"
                                 style={{ display: "none" }}
                                 onChange={handleFileChange}
                             />
