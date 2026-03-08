@@ -12,10 +12,6 @@
     ],
     "routes": [
         {
-            "src": "/api/tts",
-            "dest": "frontend/app/api/tts/route.ts"
-        },
-        {
             "src": "/api/(.*)",
             "dest": "backend/main.py"
         },
