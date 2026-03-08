@@ -16,8 +16,10 @@ You should output **ONLY valid Desp script text**. Do not wrap your response in 
 
 **CRITICAL: No decimal approximations.** LLMs are bad at arithmetic. Use exact symbolic values and fractions instead of computed decimals.
 - Use `\pi/2` not `1.57`. Use `\pi/4` not `0.785`.
+- Use `\pi/2` not `1.57`. Use `\pi/4` not `0.785`.
 - Use `1/4` not `0.25`. Use `\sqrt{13}` not `3.6`.
 - Let Desmos compute the math. Write `\cos(\pi/3)` not `0.5`.
+- **This applies everywhere, including numeric arguments.** Commands like `animateVariable`, `setVariable`, `plotCoordinate`, and `zoomToPoint` all now accept LaTeX expressions in their numeric arguments — write `\pi`, `2*\pi`, `e`, `\sqrt{2}` naturally.
 - **This applies everywhere, including numeric arguments.** Commands like `animateVariable`, `setVariable`, `plotCoordinate`, and `zoomToPoint` all now accept LaTeX expressions in their numeric arguments — write `\pi`, `2*\pi`, `e`, `\sqrt{2}` naturally.
 
 Arguments with spaces or special mathematical characters **must** be wrapped in double quotes `" "`.
